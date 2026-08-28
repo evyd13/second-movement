@@ -1,7 +1,7 @@
-Second Movement
+Second Movement for Outatime Pro
 ===============
 
-This is the successor refactor of the Movement firmware for [Sensor Watch](https://www.sensorwatch.net).
+This is firmware for the [Outatime Pro](https://github.com/evyd13/outatime-pro) based on the firmware for [Sensor Watch](https://www.sensorwatch.net). 
 
 
 Getting dependencies
@@ -24,10 +24,12 @@ where `board_type` is any of:
 - sensorwatch_green  
 - sensorwatch_red (also known as Sensor Watch Lite)
 - sensorwatch_blue
+- outatime_pro
 
 and `display_type` is any of:
 - classic
 - custom
+- calculator
 
 Optionally you can set the watch time when building the firmware using `TIMESET=minute`. 
 
@@ -51,7 +53,7 @@ Emulating the firmware
 You may want to test out changes in the emulator first. To do this, you'll need to install [emscripten](https://emscripten.org/), then run:
 
 ```
-emmake make BOARD=sensorwatch_red DISPLAY=classic
+emmake make BOARD=outatime_pro DISPLAY=calculator
 python3 -m http.server -d build-sim
 ```
 
