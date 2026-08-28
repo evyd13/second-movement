@@ -7,10 +7,11 @@ GOSSAMER_PATH=gossamer
 # - sensorwatch_green
 # - sensorwatch_red (also known as Sensor Watch Lite)
 # - sensorwatch_blue
-# BOARD=sensorwatch_pro
+# - outatime_pro
+# BOARD=outatime_pro
 
-# Set this to the type of display in your watch: classic or custom. Commented out to force a choice when building.
-# DISPLAY=classic
+# Set this to the type of display in your watch: classic, custom or calculator. Commented out to force a choice when building.
+# DISPLAY=calculator
 
 # End of user configurable options.
 
@@ -46,6 +47,8 @@ ifeq (,$(filter clean,$(MAKECMDGOALS)))
         DEFINES += -DFORCE_CUSTOM_LCD_TYPE
       else ifeq ($(DISPLAY), classic)
         DEFINES += -DFORCE_CLASSIC_LCD_TYPE
+      else ifeq ($(DISPLAY), calculator)
+        DEFINES += -DFORCE_CALCULATOR_LCD_TYPE
       else ifeq ($(DISPLAY), autodetect)
         $(warning WARNING: LCD autodetection is experimental and not reliable! We suggest specifying DISPLAY=classic or DISPLAY=custom for reliable operation.)
       else
