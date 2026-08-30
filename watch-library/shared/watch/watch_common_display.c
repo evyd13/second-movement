@@ -46,10 +46,10 @@ uint8_t IndicatorSegments[10] = {
 
 void watch_display_character(uint8_t character, uint8_t position) {
     if (character == '.') {
-        // TODO: position -1 and apply decimal
+        // TODOEEF: position -1 and apply decimal
         character = '_'; // we can use the bottom segment; make dot an underscore
     }
-    // TODO: filter characters for pos 1,2 and the other
+    // TODOEEF: filter characters for pos 1,2 and the other
 
     digit_mapping_t segmap;
     uint8_t segdata;
@@ -75,7 +75,7 @@ void watch_display_character(uint8_t character, uint8_t position) {
 
         segdata = segdata >> 1;
     }
-    // TODO: SPECIAL CASE FOR T IN POS 1    
+    // TODOEEF: SPECIAL CASE FOR T IN POS 1    
     // if (character == 'T' && position == 1) watch_set_pixel(1, 12); // add descender
 }
 
@@ -201,11 +201,11 @@ void watch_display_float_with_best_effort(float value, const char *units) {
 }
 
 void watch_set_colon(void) {
-    watch_set_pixel(1, 16);
+    watch_set_pixel(2, 9);
 }
 
 void watch_clear_colon(void) {
-    watch_clear_pixel(1, 16);
+    watch_clear_pixel(2, 9);
 }
 
 void watch_set_indicator(watch_indicator_t indicator) {

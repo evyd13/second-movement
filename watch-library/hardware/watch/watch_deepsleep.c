@@ -41,7 +41,7 @@ void sleep(const uint8_t mode) {
 }
 
 void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool level) {
-    // TODO: add keypad wakeup
+    // TODOEEF: add keypad wakeup
     uint32_t config = RTC->MODE0.TAMPCTRL.reg;
 
     if (pin == HAL_GPIO_BTN_MODE_pin()) {

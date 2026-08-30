@@ -46,7 +46,7 @@ typedef union digit_mapping_t {
 // Original CA-53W Casio LCD
 static const uint16_t Classic_LCD_Character_Set[] =
 {
-// TODO: find a way to apply a dot to any character for calculator, OR?
+// TODOEEF: find a way to apply a dot to any character for calculator, OR?
 //  0bABCDEFG.HIJ-----
     0b0000000000000000, // [space]
     0b0110000100000000, // !

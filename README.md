@@ -3,6 +3,11 @@ Second Movement for Outatime Pro
 
 This is firmware for the [Outatime Pro](https://github.com/evyd13/outatime-pro) based on the firmware for [Sensor Watch](https://www.sensorwatch.net). 
 
+## Todo:
+- ctrl+f for TODOEEF: and go from there?
+- add keypad functionality
+- update watch faces to use screen properly/to have oem functionality
+- obtain usb pid from https://pid.codes/1209/
 
 Getting dependencies
 -------------------------

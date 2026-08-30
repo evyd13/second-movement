@@ -487,7 +487,7 @@ bool movement_default_loop_handler(movement_event_t event) {
             movement_move_to_next_face();
             break;
         case EVENT_KEYPAD_BUTTON_DOWN:
-            // TODO: button, is it the times button? yes? lights on!
+            // TODOEEF: button, is it the times button? yes? lights on!
             // movement_illuminate_led();
             break;
         case EVENT_KEYPAD_BUTTON_UP:
@@ -1111,7 +1111,7 @@ void app_setup(void) {
     watch_enable_display();
 
     if (!movement_volatile_state.is_sleeping) {
-        // TODO: change this to handle keypad
+        // TODOEEF: change this to handle keypad
         watch_disable_extwake_interrupt(HAL_GPIO_BTN_MODE_pin());
 
         watch_enable_external_interrupts();
@@ -1413,7 +1413,7 @@ bool app_loop(void) {
 }
 
 static movement_event_type_t _process_button_event(bool pin_level, movement_button_t* button) {
-    // TODO: should probably do something with keypad key handling here too
+    // TODOEEF: should probably do something with keypad key handling here too
     movement_event_type_t event_type = EVENT_NONE;
 
     // This shouldn't happen normally
@@ -1455,7 +1455,7 @@ static movement_event_type_t _process_button_event(bool pin_level, movement_butt
 }
 
 void cb_keypad_btn_interrupt(void) {
-    // TODO: figure out what this function does and adapt it to keypad matrix
+    // TODOEEF: figure out what this function does and adapt it to keypad matrix
     bool pin_level = HAL_GPIO_BTN_KEYPAD_read();
 
     movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.keypad_button);
@@ -1509,7 +1509,7 @@ static movement_event_type_t _process_button_longpress_timeout(bool pin_level, m
 }
 
 void cb_keypad_btn_timeout_interrupt(void) {
-    // TODO: figure out what this function does and adapt it to keypad matrix
+    // TODOEEF: figure out what this function does and adapt it to keypad matrix
     bool pin_level = HAL_GPIO_BTN_KEYPAD_read();
     movement_button_t* button = &movement_volatile_state.keypad_button;
 
@@ -1543,7 +1543,7 @@ void cb_sleep_timeout_interrupt(void) {
 }
 
 void cb_mode_btn_extwake(void) {
-    // TODO: add these functions for keypad and adjust buttons too! each has its own interrupt pin :)
+    // TODOEEF: add these functions for keypad and adjust buttons too! each has its own interrupt pin :)
     // wake up!
     movement_request_wake();
 }
