@@ -55,7 +55,7 @@ volatile uint32_t scheduled_comp_counter;
 watch_cb_t tick_callbacks[8];
 comp_cb_t comp_callbacks[WATCH_RTC_N_COMP_CB];
 watch_cb_t alarm_callback;
-watch_cb_t btn_alarm_callback;
+watch_cb_t btn_mode_callback;
 watch_cb_t a2_callback;
 watch_cb_t a4_callback;
 
@@ -310,7 +310,7 @@ void watch_rtc_callback(uint16_t interrupt_cause) {
         // handle the extwake interrupts next.
         uint8_t reason = RTC->MODE0.TAMPID.reg;
         if (reason & RTC_TAMPID_TAMPID2) {
-            if (btn_alarm_callback != NULL) btn_alarm_callback();
+            if (btn_mode_callback != NULL) btn_mode_callback();
         } else if (reason & RTC_TAMPID_TAMPID1) {
             if (a2_callback != NULL) a2_callback();
         } else if (reason & RTC_TAMPID_TAMPID0) {

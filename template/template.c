@@ -52,12 +52,12 @@ bool <#watch_face_name#>_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
             // If needed, update your display here.
             break;
-        case EVENT_LIGHT_BUTTON_UP:
+        case EVENT_KEYPAD_BUTTON_UP:
             // You can use the Light button for your own purposes. Note that by default, Movement will also
-            // illuminate the LED in response to EVENT_LIGHT_BUTTON_DOWN; to suppress that behavior, add an
-            // empty case for EVENT_LIGHT_BUTTON_DOWN.
+            // illuminate the LED in response to EVENT_KEYPAD_BUTTON_DOWN; to suppress that behavior, add an
+            // empty case for EVENT_KEYPAD_BUTTON_DOWN.
             break;
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ADJUST_BUTTON_UP:
             // Just in case you have need for another button.
             break;
         case EVENT_TIMEOUT:
@@ -73,7 +73,7 @@ bool <#watch_face_name#>_face_loop(movement_event_t event, void *context) {
             break;
         default:
             // Movement's default loop handler will step in for any cases you don't handle above:
-            // * EVENT_LIGHT_BUTTON_DOWN lights the LED
+            // * EVENT_KEYPAD_BUTTON_DOWN lights the LED
             // * EVENT_MODE_BUTTON_UP moves to the next watch face in the list
             // * EVENT_MODE_LONG_PRESS returns to the first watch face (or skips to the secondary watch face, if configured)
             // You can override any of these behaviors by adding a case for these events to this switch statement.

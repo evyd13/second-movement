@@ -27,481 +27,329 @@
 // COM occupies two bits, SEG occupes the rest.
 typedef union segment_mapping_t {
     struct {
-        uint8_t com : 2;
-        uint8_t seg : 6;
+        uint8_t com : 3;
+        uint8_t seg : 5;
     } address;
-    uint8_t value;
+    uint16_t value;
 } segment_mapping_t;
 
 // Value to indicate that a segment does not exist
-static const uint8_t segment_does_not_exist = 0xff;
+static const uint16_t segment_does_not_exist = 0xffff;
 
-// Union representing 8 segment mappings, A-H
+// Union representing 16 segment mappings, A-J
 typedef union digit_mapping_t {
-    segment_mapping_t segment[8];
+    segment_mapping_t segment[16];
     uint64_t value;
 } digit_mapping_t;
 
-// Custom extended LCD
 
-// Character set is slightly different since we don't have to work around as much stuff.
-static const uint8_t Custom_LCD_Character_Set[] =
+// Original CA-53W Casio LCD
+static const uint16_t Classic_LCD_Character_Set[] =
 {
-    0b00000000, // [space]
-    0b00111100, // ! L with an extra C segment (use !J to make a W)
-    0b00100010, // "
-    0b01100011, // # (degree symbol, hash mark doesn't fit)
-    0b11101101, // $ (S with a downstroke)
-    0b00000000, // % (unused)
-    0b01000100, // & ("lowercase 7" for positions 4 and 6)
-    0b00100000, // '
-    0b00111001, // (
-    0b00001111, // )
-    0b11000000, // * (The + sign for use in position 0)
-    0b01110000, // + (segments E, F and G; looks like ┣╸)
-    0b00000100, // ,
-    0b01000000, // -
-    0b00001000, // . (same as _, semantically most useful)
-    0b00010010, // /
-    0b00111111, // 0
-    0b00000110, // 1
-    0b01011011, // 2
-    0b01001111, // 3
-    0b01100110, // 4
-    0b01101101, // 5
-    0b01111101, // 6
-    0b00000111, // 7
-    0b01111111, // 8
-    0b01101111, // 9
-    0b00000000, // : (unused)
-    0b00000000, // ; (unused)
-    0b01011000, // <
-    0b01001000, // =
-    0b01001100, // >
-    0b01010011, // ?
-    0b11111111, // @ (all segments on)
-    0b01110111, // A
-    0b11001111, // B (with downstroke, only in weekday / seconds)
-    0b00111001, // C
-    0b10001111, // D (with downstroke, only in weekday / seconds)
-    0b01111001, // E
-    0b01110001, // F
-    0b00111101, // G
-    0b01110110, // H
-    0b10001001, // I (only works in position 0)
-    0b00011110, // J
-    0b01110101, // K
-    0b00111000, // L
-    0b10110111, // M (only works in position 0)
-    0b00110111, // N
-    0b00111111, // O
-    0b01110011, // P
-    0b01100111, // Q
-    0b11000111, // R
-    0b01101101, // S
-    0b10000001, // T (only works in position 0; set (1, 12) to make it work in position 1)
-    0b00111110, // U
-    0b00111110, // V
-    0b10111110, // W (only works in position 0)
-    0b11110110, // X
-    0b01101110, // Y
-    0b00011011, // Z
-    0b00111001, // [
-    0b00100100, // backslash
-    0b00001111, // ]
-    0b00100011, // ^
-    0b00001000, // _
-    0b00000010, // `
-    0b01011111, // a
-    0b01111100, // b
-    0b01011000, // c
-    0b01011110, // d
-    0b01111011, // e
-    0b01110001, // f
-    0b01101111, // g
-    0b01110100, // h
-    0b00010000, // i
-    0b00001110, // j
-    0b01110101, // k
-    0b00110000, // l
-    0b10110111, // m (only works in position 0)
-    0b01010100, // n
-    0b01011100, // o
-    0b01110011, // p
-    0b01100111, // q
-    0b01010000, // r
-    0b01101101, // s
-    0b01111000, // t
-    0b00011100, // u
-    0b00011100, // v (looks like u)
-    0b10111110, // w
-    0b01111110, // x
-    0b01101110, // y
-    0b00011011, // z
-    0b00010110, // { (open brace doesn't really work; overriden to represent the two character ligature "il")
-    0b00110110, // | (overriden to represent the two character ligature "ll")
-    0b00110100, // } (overriden to represent the two character ligature "li")
-    0b00000001, // ~
-};
-
-static const digit_mapping_t Custom_LCD_Display_Mapping[] = {
-    {
-        .segment = {
-            { .address = { .com = 0, .seg = 19 } }, // 0A
-            { .address = { .com = 2, .seg = 19 } }, // 0B
-            { .address = { .com = 3, .seg = 19 } }, // 0C
-            { .address = { .com = 3, .seg = 20 } }, // 0D
-            { .address = { .com = 2, .seg = 20 } }, // 0E
-            { .address = { .com = 0, .seg = 20 } }, // 0F
-            { .address = { .com = 1, .seg = 20 } }, // 0G
-            { .address = { .com = 1, .seg = 19 } }, // 0H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 0, .seg = 17 } }, // 1A
-            { .address = { .com = 2, .seg = 17 } }, // 1B
-            { .address = { .com = 3, .seg = 17 } }, // 1C
-            { .address = { .com = 3, .seg = 18 } }, // 1D
-            { .address = { .com = 2, .seg = 18 } }, // 1E
-            { .address = { .com = 0, .seg = 18 } }, // 1F
-            { .address = { .com = 1, .seg = 18 } }, // 1G
-            { .address = { .com = 1, .seg = 17 } }, // 1H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 0, .seg = 11 } }, // 2A
-            { .address = { .com = 0, .seg = 10 } }, // 2B
-            { .address = { .com = 2, .seg = 10 } }, // 2C
-            { .address = { .com = 3, .seg = 11 } }, // 2D
-            { .address = { .com = 2, .seg = 11 } }, // 2E
-            { .address = { .com = 1, .seg = 11 } }, // 2F
-            { .address = { .com = 1, .seg = 10 } }, // 2G
-            { .value = segment_does_not_exist },    // 2H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 0, .seg =  9 } }, // 3A
-            { .address = { .com = 0, .seg =  8 } }, // 3B
-            { .address = { .com = 2, .seg =  8 } }, // 3C
-            { .address = { .com = 3, .seg =  9 } }, // 3D
-            { .address = { .com = 2, .seg =  9 } }, // 3E
-            { .address = { .com = 1, .seg =  9 } }, // 3F
-            { .address = { .com = 1, .seg =  8 } }, // 3G
-            { .value = segment_does_not_exist },    // 3H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 3, .seg = 16 } }, // 4A
-            { .address = { .com = 2, .seg = 16 } }, // 4B
-            { .address = { .com = 1, .seg = 16 } }, // 4C
-            { .address = { .com = 0, .seg = 16 } }, // 4D
-            { .address = { .com = 1, .seg = 22 } }, // 4E
-            { .address = { .com = 3, .seg = 22 } }, // 4F
-            { .address = { .com = 2, .seg = 22 } }, // 4G
-            { .value = segment_does_not_exist },    // 4H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 3, .seg = 14 } }, // 5A
-            { .address = { .com = 2, .seg = 14 } }, // 5B
-            { .address = { .com = 1, .seg = 14 } }, // 5C
-            { .address = { .com = 0, .seg = 15 } }, // 5D
-            { .address = { .com = 1, .seg = 15 } }, // 5E
-            { .address = { .com = 3, .seg = 15 } }, // 5F
-            { .address = { .com = 2, .seg = 15 } }, // 5G
-            { .value = segment_does_not_exist },    // 5H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 3, .seg =  1 } }, // 6A
-            { .address = { .com = 2, .seg =  2 } }, // 6B
-            { .address = { .com = 0, .seg =  2 } }, // 6C
-            { .address = { .com = 0, .seg =  1 } }, // 6D
-            { .address = { .com = 1, .seg =  1 } }, // 6E
-            { .address = { .com = 2, .seg =  1 } }, // 6F
-            { .address = { .com = 1, .seg =  2 } }, // 6G
-            { .value = segment_does_not_exist },    // 6H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 3, .seg =  3 } }, // 7A
-            { .address = { .com = 2, .seg =  4 } }, // 7B
-            { .address = { .com = 0, .seg =  4 } }, // 7C
-            { .address = { .com = 0, .seg =  3 } }, // 7D
-            { .address = { .com = 1, .seg =  3 } }, // 7E
-            { .address = { .com = 2, .seg =  3 } }, // 7F
-            { .address = { .com = 1, .seg =  4 } }, // 7G
-            { .value = segment_does_not_exist },    // 7H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 3, .seg = 10 } }, // 8A
-            { .address = { .com = 3, .seg =  8 } }, // 8B
-            { .address = { .com = 0, .seg =  5 } }, // 8C
-            { .address = { .com = 1, .seg =  5 } }, // 8D
-            { .address = { .com = 3, .seg =  4 } }, // 8E
-            { .address = { .com = 3, .seg =  2 } }, // 8F
-            { .address = { .com = 2, .seg =  5 } }, // 8G
-            { .address = { .com = 3, .seg =  5 } }, // 8H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 3, .seg = 6 } }, // 9A
-            { .address = { .com = 3, .seg = 7 } }, // 9B
-            { .address = { .com = 2, .seg = 7 } }, // 9C
-            { .address = { .com = 0, .seg = 7 } }, // 9D
-            { .address = { .com = 0, .seg = 6 } }, // 9E
-            { .address = { .com = 2, .seg = 6 } }, // 9F
-            { .address = { .com = 1, .seg = 6 } }, // 9G
-            { .address = { .com = 1, .seg = 7 } }, // 9H
-        },
-    },
-    // Position 10 is the third digit in the weekday, stashed at the end for backwards compatibility.
-    {
-        .segment = {
-            { .address = { .com = 0, .seg = 12 } }, // 10A
-            { .address = { .com = 2, .seg = 12 } }, // 10B
-            { .address = { .com = 3, .seg = 12 } }, // 10C
-            { .address = { .com = 3, .seg = 13 } }, // 10D
-            { .address = { .com = 2, .seg = 13 } }, // 10E
-            { .address = { .com = 0, .seg = 13 } }, // 10F
-            { .address = { .com = 1, .seg = 13 } }, // 10G
-            { .address = { .com = 1, .seg = 12 } }, // 10H
-        },
-    },
-};
-
-// Original famous Casio LCD
-static const uint8_t Classic_LCD_Character_Set[] =
-{
-    0b00000000, // [space]
-    0b01100000, // ! (L in the top half for positions 4 and 6)
-    0b00100010, // "
-    0b01100011, // # (degree symbol, hash mark doesn't fit)
-    0b00101101, // $ (S without the center segment)
-    0b00000000, // % (unused)
-    0b01000100, // & ("lowercase 7" for positions 4 and 6)
-    0b00100000, // '
-    0b00111001, // (
-    0b00001111, // )
-    0b11000000, // * (The + sign for use in position 0)
-    0b01110000, // + (segments E, F and G; looks like ┣╸)
-    0b00000100, // ,
-    0b01000000, // -
-    0b01000000, // . (same as -, semantically most useful)
-    0b00010010, // /
-    0b00111111, // 0
-    0b00000110, // 1
-    0b01011011, // 2
-    0b01001111, // 3
-    0b01100110, // 4
-    0b01101101, // 5
-    0b01111101, // 6
-    0b00000111, // 7
-    0b01111111, // 8
-    0b01101111, // 9
-    0b00000000, // : (unused)
-    0b00000000, // ; (unused)
-    0b01011000, // <
-    0b01001000, // =
-    0b01001100, // >
-    0b01010011, // ?
-    0b11111111, // @ (all segments on)
-    0b01110111, // A
-    0b01111111, // B
-    0b00111001, // C
-    0b00111111, // D
-    0b01111001, // E
-    0b01110001, // F
-    0b00111101, // G
-    0b01110110, // H
-    0b10001001, // I (only works in position 0)
-    0b00001110, // J
-    0b01110101, // K
-    0b00111000, // L
-    0b10110111, // M (only works in position 0)
-    0b00110111, // N
-    0b00111111, // O
-    0b01110011, // P
-    0b01100111, // Q
-    0b11110111, // R (only works in position 1)
-    0b01101101, // S
-    0b10000001, // T (only works in position 0; set (1, 12) to make it work in position 1)
-    0b00111110, // U
-    0b00111110, // V
-    0b10111110, // W (only works in position 0)
-    0b01111110, // X
-    0b01101110, // Y
-    0b00011011, // Z
-    0b00111001, // [
-    0b00100100, // backslash
-    0b00001111, // ]
-    0b00100011, // ^
-    0b00001000, // _
-    0b00000010, // `
-    0b01011111, // a
-    0b01111100, // b
-    0b01011000, // c
-    0b01011110, // d
-    0b01111011, // e
-    0b01110001, // f
-    0b01101111, // g
-    0b01110100, // h
-    0b00010000, // i
-    0b01000010, // j (appears as superscript to work in more positions)
-    0b01110101, // k
-    0b00110000, // l
-    0b10110111, // m (only works in position 0)
-    0b01010100, // n
-    0b01011100, // o
-    0b01110011, // p
-    0b01100111, // q
-    0b01010000, // r
-    0b01101101, // s
-    0b01111000, // t
-    0b01100010, // u (appears in (u)pper half to work in more positions)
-    0b00011100, // v (looks like u but in the lower half)
-    0b10111110, // w (only works in position 0)
-    0b01111110, // x
-    0b01101110, // y
-    0b00011011, // z
-    0b00010110, // { (open brace doesn't really work; overriden to represent the two character ligature "il")
-    0b00110110, // | (overriden to represent the two character ligature "ll")
-    0b00110100, // } (overriden to represent the two character ligature "li")
-    0b00000001, // ~
+// TODO: find a way to apply a dot to any character for calculator, OR?
+//  0bABCDEFG.HIJ-----
+    0b0000000000000000, // [space]
+    0b0110000100000000, // !
+    0b0100010000000000, // "
+    0b1100011000000000, // # (degree symbol, hash mark doesn't fit)
+    0b1011011000000000, // $ (S without the center segment)
+    0b0100101100000000, // % (unused)
+    0b0010001000000000, // & ("lowercase 7" for positions 4 and 6 and as right half of "m")
+    0b0000010000000000, // '
+    0b1001010000000000, // (
+    0b1101000000000000, // )
+    0b1000010000000000, // *
+    0b0000111000000000, // + (segments E, F and G; looks like ┣╸)
+    0b0000100000000000, // ,
+    0b0000001000000000, // -
+    0b0000000100000000, // .
+    0b0100101000000000, // /
+    0b1111110000000000, // 0
+    0b0110000000000000, // 1
+    0b1101101000000000, // 2
+    0b1111001000000000, // 3
+    0b0110010000000000, // 4
+    0b1011011000000000, // 5
+    0b1011111000000000, // 6
+    0b1110000000000000, // 7
+    0b1111111000000000, // 8
+    0b1111011000000000, // 9
+    0b1001000000000000, // : (unused)
+    0b1011000000000000, // ; (unused)
+    0b1000011000000000, // <
+    0b0001001000000000, // =
+    0b1100001000000000, // >
+    0b1100101100000000, // ?
+    0b1111111111111111, // @ (all segments on)
+    0b1111101000000000, // A
+    0b0011111000000000, // B
+    0b1001110000000000, // C
+    0b1111110010100000, // D (only works in position 0)
+    0b1001111000000000, // E
+    0b1000111000000000, // F
+    0b1011110000000000, // G
+    0b0110111000000000, // H
+    0b1001110010100000, // I (only works in position 0)
+    0b0111100000000000, // J
+    0b1010111000000000, // K
+    0b0001110000000000, // L
+    0b1110110001100000, // M (only works in position 0)
+    0b1110110000000000, // N
+    0b1111110000000000, // O
+    0b1100111000000000, // P
+    0b1101011000000000, // Q
+    0b1110111010000000, // R (only works in position 1)
+    0b1011011000000000, // S
+    0b1000110000100000, // T (only works in position 0)
+    0b0111110000000000, // U
+    0b0111110000000000, // V
+    0b0111110011000000, // W (only works in position 0)
+    0b0110111000000000, // X
+    0b0111011000000000, // Y
+    0b1101101000000000, // Z
+    0b1001110000000000, // [
+    0b0010011000000000, // backslash
+    0b1111000000000000, // ]
+    0b1100010000000000, // ^
+    0b0001000000000000, // _
+    0b0100000000000000, // `
+    0b1111101000000000, // a
+    0b0011111000000000, // b
+    0b0001101000000000, // c
+    0b0111101000000000, // d
+    0b1101111000000000, // e
+    0b1000111000000000, // f
+    0b1111011000000000, // g
+    0b0010111000000000, // h
+    0b0000100000000000, // i
+    0b0011000000000000, // j 
+    0b1010111000000000, // k
+    0b0000110000000000, // l
+    0b1110110001100000, // m (only works in position 0)
+    0b0010101000000000, // n
+    0b0011101000000000, // o
+    0b1100111000000000, // p
+    0b1110011000000000, // q
+    0b0000101000000000, // r
+    0b1011011000000000, // s
+    0b0001111000000000, // t
+    0b0100011000000000, // u
+    0b0100011000000000, // v
+    0b0111110011000000, // w (only works in position 0)
+    0b0110111000000000, // x
+    0b0111011000000000, // y
+    0b1101101000000000, // z
+    0b0110100000000000, // { (open brace doesn't really work; overriden to represent the two character ligature "il")
+    0b0110110000000000, // | (overriden to represent the two character ligature "ll")
+    0b0010110000000000, // } (overriden to represent the two character ligature "li")
+    0b0000001000000000, // ~
 };
 
 static const digit_mapping_t Classic_LCD_Display_Mapping[] = {
     // Positions 0 and 1 are the Weekday or Mode digits
     {
         .segment = {
-            { .address = { .com = 0, .seg = 13 } }, // 0A
-            { .address = { .com = 1, .seg = 13 } }, // 0B
-            { .address = { .com = 2, .seg = 13 } }, // 0C
-            { .address = { .com = 2, .seg = 15 } }, // 0D
-            { .address = { .com = 2, .seg = 14 } }, // 0E
-            { .address = { .com = 0, .seg = 14 } }, // 0F
-            { .address = { .com = 1, .seg = 15 } }, // 0G
-            { .address = { .com = 1, .seg = 14 } }, // 0H
+            { .address = { .com = 1, .seg = 29 } }, // A
+            { .address = { .com = 2, .seg = 29 } }, // B
+            { .address = { .com = 3, .seg = 28 } }, // C
+            { .address = { .com = 3, .seg = 23 } }, // D
+            { .address = { .com = 3, .seg = 30 } }, // E
+            { .address = { .com = 2, .seg = 30 } }, // F
+            { .address = { .com = 3, .seg = 29 } }, // G
+            { .value = segment_does_not_exist }, // DOT
+            { .address = { .com = 3, .seg = 20 } }, // H
+            { .address = { .com = 1, .seg = 31 } }, // I
+            { .address = { .com = 1, .seg = 30 } }, // J
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
         },
     },
     {
         .segment = {
-            { .address = { .com = 0, .seg = 11 } }, // 1A
-            { .address = { .com = 1, .seg = 11 } }, // 1B, note that 1B has the same address as 1C
-            { .address = { .com = 1, .seg = 11 } }, // 1C, will override 1B when displaying a character
-            { .address = { .com = 2, .seg = 11 } }, // 1D
-            { .address = { .com = 1, .seg = 12 } }, // 1E, note that 1E has the same address as 1F
-            { .address = { .com = 1, .seg = 12 } }, // 1F, will override 1E when displaying a character
-            { .address = { .com = 2, .seg = 12 } }, // 1G
-            { .address = { .com = 0, .seg = 12 } }, // 1H
+            { .address = { .com = 1, .seg = 27 } }, // A
+            { .address = { .com = 1, .seg = 26 } }, // B
+            { .address = { .com = 2, .seg = 26 } }, // C
+            { .address = { .com = 3, .seg = 26 } }, // D
+            { .address = { .com = 3, .seg = 27 } }, // E
+            { .address = { .com = 2, .seg = 28 } }, // F
+            { .address = { .com = 2, .seg = 27 } }, // G
+            { .value = segment_does_not_exist }, // DOT
+            { .address = { .com = 1, .seg = 28 } }, // H
+            { .value = segment_does_not_exist }, // I
+            { .value = segment_does_not_exist }, // J
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
         },
     },
-    // Positions 2 and 3 are the Day of Month digits
+    // Positions 2 and 3 are the hour digits
     {
         .segment = {
-            { .address = { .com = 1, .seg =  9 } }, // 2A, note that 2A, 2D and 2G have the same address
-            { .address = { .com = 0, .seg =  9 } }, // 2B
-            { .address = { .com = 2, .seg =  9 } }, // 2C
-            { .address = { .com = 1, .seg =  9 } }, // 2D, same address as 2A and 2G
-            { .address = { .com = 0, .seg = 10 } }, // 2E
-            { .value = segment_does_not_exist },    // 2F
-            { .address = { .com = 1, .seg =  9 } }, // 2G, will override 2A and 2D when displaying a character
-            { .value = segment_does_not_exist },    // 2H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 0, .seg =  7 } }, // 3A
-            { .address = { .com = 1, .seg =  7 } }, // 3B
-            { .address = { .com = 2, .seg =  7 } }, // 3C
-            { .address = { .com = 2, .seg =  6 } }, // 3D
-            { .address = { .com = 2, .seg =  8 } }, // 3E
-            { .address = { .com = 0, .seg =  8 } }, // 3F
-            { .address = { .com = 1, .seg =  8 } }, // 3G
-            { .value = segment_does_not_exist },    // 3H
-        },
-    },
-    // Positions 4-9 are the Clock digits
-    {
-        .segment = {
-            { .address = { .com = 1, .seg = 18 } }, // 4A, note that 4A and 4D have the same address
-            { .address = { .com = 2, .seg = 19 } }, // 4B
-            { .address = { .com = 0, .seg = 19 } }, // 4C
-            { .address = { .com = 1, .seg = 18 } }, // 4D, will override 4A when displaying a character
-            { .address = { .com = 0, .seg = 18 } }, // 4E
-            { .address = { .com = 2, .seg = 18 } }, // 4F
-            { .address = { .com = 1, .seg = 19 } }, // 4G
-            { .value = segment_does_not_exist },    // 4H
+            { .address = { .com = 3, .seg = 3 } }, // A
+            { .address = { .com = 3, .seg = 4 } }, // B
+            { .address = { .com = 2, .seg = 4 } }, // C
+            { .address = { .com = 1, .seg = 3 } }, // D
+            { .address = { .com = 1, .seg = 2 } }, // E
+            { .address = { .com = 2, .seg = 2 } }, // F
+            { .address = { .com = 2, .seg = 3 } }, // G
+            { .address = { .com = 1, .seg = 4 } }, // DOT
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
         },
     },
     {
         .segment = {
-            { .address = { .com = 2, .seg = 20 } }, // 5A
-            { .address = { .com = 2, .seg = 21 } }, // 5B
-            { .address = { .com = 1, .seg = 21 } }, // 5C
-            { .address = { .com = 0, .seg = 21 } }, // 5D
-            { .address = { .com = 0, .seg = 20 } }, // 5E
-            { .address = { .com = 1, .seg = 17 } }, // 5F
-            { .address = { .com = 1, .seg = 20 } }, // 5G
-            { .value = segment_does_not_exist },    // 5H
+            { .address = { .com = 3, .seg = 6 } }, // A
+            { .address = { .com = 2, .seg = 7 } }, // B
+            { .address = { .com = 1, .seg = 7 } }, // C
+            { .address = { .com = 1, .seg = 6 } }, // D
+            { .address = { .com = 1, .seg = 5 } }, // E
+            { .address = { .com = 2, .seg = 5 } }, // F
+            { .address = { .com = 2, .seg = 6 } }, // G
+            { .address = { .com = 1, .seg = 8 } }, // DOT
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+        },
+    },
+    // Positions 4 is located at the hour-minute seperator (:)
+    {
+        .segment = {
+            { .address = { .com = 2, .seg = 31 } }, // A
+            { .address = { .com = 3, .seg = 10 } }, // B
+            { .address = { .com = 2, .seg = 10 } }, // C
+            { .address = { .com = 1, .seg = 9 } }, // D
+            { .address = { .com = 2, .seg = 8 } }, // E
+            { .address = { .com = 3, .seg = 8 } }, // F
+            { .address = { .com = 3, .seg = 9 } }, // G
+            { .address = { .com = 1, .seg = 10 } }, // DOT
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+        },
+    },
+    // Positions 5 and 6 are the minute digits
+    {
+        .segment = {
+            { .address = { .com = 3, .seg = 12 } }, // A
+            { .address = { .com = 3, .seg = 13 } }, // B
+            { .address = { .com = 2, .seg = 13 } }, // C
+            { .address = { .com = 1, .seg = 12 } }, // D
+            { .address = { .com = 1, .seg = 11 } }, // E
+            { .address = { .com = 2, .seg = 11 } }, // F
+            { .address = { .com = 2, .seg = 12 } }, // G
+            { .address = { .com = 1, .seg = 13 } }, // DOT
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
         },
     },
     {
         .segment = {
-            { .address = { .com = 0, .seg = 22 } }, // 6A, note that 6A and 6D have the same address
-            { .address = { .com = 2, .seg = 23 } }, // 6B
-            { .address = { .com = 0, .seg = 23 } }, // 6C
-            { .address = { .com = 0, .seg = 22 } }, // 6D, will override 6A when displaying a character
-            { .address = { .com = 1, .seg = 22 } }, // 6E
-            { .address = { .com = 2, .seg = 22 } }, // 6F
-            { .address = { .com = 1, .seg = 23 } }, // 6G
-            { .value = segment_does_not_exist },    // 6H
+            { .address = { .com = 3, .seg = 15 } }, // A
+            { .address = { .com = 3, .seg = 16 } }, // B
+            { .address = { .com = 2, .seg = 16 } }, // C
+            { .address = { .com = 1, .seg = 15 } }, // D
+            { .address = { .com = 1, .seg = 14 } }, // E
+            { .address = { .com = 2, .seg = 14 } }, // F
+            { .address = { .com = 2, .seg = 15 } }, // G
+            { .address = { .com = 1, .seg = 16 } }, // DOT
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+        },
+    },
+    // Positions 7 is located between minutes and seconds, and it is not used in the watch face.
+    {
+        .segment = {
+            { .address = { .com = 3, .seg = 18 } }, // A
+            { .address = { .com = 3, .seg = 19 } }, // B
+            { .address = { .com = 2, .seg = 19 } }, // C
+            { .address = { .com = 1, .seg = 18 } }, // D
+            { .address = { .com = 1, .seg = 17 } }, // E
+            { .address = { .com = 2, .seg = 17 } }, // F
+            { .address = { .com = 2, .seg = 18 } }, // G
+            { .address = { .com = 1, .seg = 19 } }, // DOT
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+        },
+    },
+    // Positions 8 and 9 are the seconds digits
+    {
+        .segment = {
+            { .address = { .com = 3, .seg = 21 } }, // A
+            { .address = { .com = 3, .seg = 22 } }, // B
+            { .address = { .com = 2, .seg = 22 } }, // C
+            { .address = { .com = 1, .seg = 21 } }, // D
+            { .address = { .com = 1, .seg = 20 } }, // E
+            { .address = { .com = 2, .seg = 20 } }, // F
+            { .address = { .com = 2, .seg = 21 } }, // G
+            { .address = { .com = 1, .seg = 22 } }, // DOT
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
         },
     },
     {
         .segment = {
-            { .address = { .com = 2, .seg =  1 } }, // 7A
-            { .address = { .com = 2, .seg = 10 } }, // 7B
-            { .address = { .com = 0, .seg =  1 } }, // 7C
-            { .address = { .com = 0, .seg =  0 } }, // 7D
-            { .address = { .com = 1, .seg =  0 } }, // 7E
-            { .address = { .com = 2, .seg =  0 } }, // 7F
-            { .address = { .com = 1, .seg =  1 } }, // 7G
-            { .value = segment_does_not_exist },    // 7H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 2, .seg =  2 } }, // 8A
-            { .address = { .com = 2, .seg =  3 } }, // 8B
-            { .address = { .com = 0, .seg =  4 } }, // 8C
-            { .address = { .com = 0, .seg =  3 } }, // 8D
-            { .address = { .com = 0, .seg =  2 } }, // 8E
-            { .address = { .com = 1, .seg =  2 } }, // 8F
-            { .address = { .com = 1, .seg =  3 } }, // 8G
-            { .value = segment_does_not_exist },    // 8H
-        },
-    },
-    {
-        .segment = {
-            { .address = { .com = 2, .seg =  4 } }, // 9A
-            { .address = { .com = 2, .seg =  5 } }, // 9B
-            { .address = { .com = 1, .seg =  6 } }, // 9C
-            { .address = { .com = 0, .seg =  6 } }, // 9D
-            { .address = { .com = 0, .seg =  5 } }, // 9E
-            { .address = { .com = 1, .seg =  4 } }, // 9F
-            { .address = { .com = 1, .seg =  5 } }, // 9G
-            { .value = segment_does_not_exist },    // 9H
+            { .address = { .com = 3, .seg = 24 } }, // A
+            { .address = { .com = 3, .seg = 25 } }, // B
+            { .address = { .com = 2, .seg = 25 } }, // C
+            { .address = { .com = 1, .seg = 24 } }, // D
+            { .address = { .com = 1, .seg = 23 } }, // E
+            { .address = { .com = 2, .seg = 23 } }, // F
+            { .address = { .com = 2, .seg = 24 } }, // G
+            { .address = { .com = 1, .seg = 25 } }, // DOT
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
+            { .value = segment_does_not_exist },    // fill byte
         },
     },
 };
@@ -509,4 +357,3 @@ static const digit_mapping_t Classic_LCD_Display_Mapping[] = {
 void watch_display_character(uint8_t character, uint8_t position);
 void watch_display_character_lp_seconds(uint8_t character, uint8_t position);
 
-void _watch_update_indicator_segments(void);

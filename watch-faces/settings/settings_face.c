@@ -27,7 +27,7 @@
 #include "watch.h"
 
 static void clock_setting_display(uint8_t subsecond) {
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "CLOCK", "CL");
+    watch_display_text(WATCH_POSITION_TOP, "CL");
     if (subsecond % 2) {
         if (movement_clock_mode_24h()) watch_display_text(WATCH_POSITION_BOTTOM, "24h");
         else watch_display_text(WATCH_POSITION_BOTTOM, "12h");
@@ -41,24 +41,24 @@ static void clock_setting_advance(void) {
 }
 
 static void beep_setting_display(uint8_t subsecond) {
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "BTN", "BT");
-    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "beep  ", " beep ");
+    watch_display_text(WATCH_POSITION_TOP, "BT");
+    watch_display_text(WATCH_POSITION_BOTTOM, " beep ");
     if (subsecond % 2) {
         if (movement_button_should_sound()) {
             if (movement_button_volume() == WATCH_BUZZER_VOLUME_LOUD) {
                 // H for HIGH
-                watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
+                watch_display_text(WATCH_POSITION_SECONDS, " H");
             }
             else {
                 // L for LOW
-                watch_display_text(WATCH_POSITION_TOP_RIGHT, " L");
+                watch_display_text(WATCH_POSITION_SECONDS, " L");
             }
         } else {
             // N for NONE
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " N");
+            watch_display_text(WATCH_POSITION_SECONDS, " N");
         }
     } else {
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_SECONDS, "  ");
     }
 }
 
@@ -82,19 +82,19 @@ static void beep_setting_advance(void) {
 }
 
 static void signal_setting_display(uint8_t subsecond) {
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SIG", "SI");
+    watch_display_text(WATCH_POSITION_TOP, "SI");
     watch_display_text(WATCH_POSITION_BOTTOM, "SIGNAL");
     if (subsecond % 2) {
         if (movement_signal_volume() == WATCH_BUZZER_VOLUME_LOUD) {
             // H for HIGH
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
+            watch_display_text(WATCH_POSITION_SECONDS, " H");
         }
         else {
             // L for LOW
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " L");
+            watch_display_text(WATCH_POSITION_SECONDS, " L");
         }
     } else {
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_SECONDS, "  ");
     }
 }
 
@@ -113,19 +113,19 @@ static void signal_setting_advance(void) {
 
 
 static void alarm_setting_display(uint8_t subsecond) {
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "ALM", "AL");
+    watch_display_text(WATCH_POSITION_TOP, "AL");
     watch_display_text(WATCH_POSITION_BOTTOM, "ALARM ");
     if (subsecond % 2) {
         if (movement_alarm_volume() == WATCH_BUZZER_VOLUME_LOUD) {
             // H for HIGH
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
+            watch_display_text(WATCH_POSITION_SECONDS, " H");
         }
         else {
             // L for LOW
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " L");
+            watch_display_text(WATCH_POSITION_SECONDS, " L");
         }
     } else {
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_SECONDS, "  ");
     }
 }
 
@@ -144,7 +144,7 @@ static void alarm_setting_advance(void) {
 }
 
 static void timeout_setting_display(uint8_t subsecond) {
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "TMOUt", "TO");
+    watch_display_text(WATCH_POSITION_TOP, "TO");
     if (subsecond % 2) {
         switch (movement_get_fast_tick_timeout()) {
             case 0:
@@ -170,7 +170,7 @@ static void timeout_setting_advance(void) {
 }
 
 static void low_energy_setting_display(uint8_t subsecond) {
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "LoEne", "LE");
+    watch_display_text(WATCH_POSITION_TOP, "LE");
     if (subsecond % 2) {
         switch (movement_get_low_energy_timeout()) {
             case 0:
@@ -210,7 +210,7 @@ static void low_energy_setting_advance(void) {
 static void led_duration_setting_display(uint8_t subsecond) {
     char buf[8];
 
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LED", "LT");
+    watch_display_text(WATCH_POSITION_TOP, "LT");
     if (subsecond % 2) {
         if (movement_get_backlight_dwell() == 0) {
             watch_display_text(WATCH_POSITION_BOTTOM, "instnt");
@@ -237,13 +237,13 @@ static void red_led_setting_display(uint8_t subsecond) {
     char buf[8];
     movement_color_t color = movement_backlight_color();
 
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LED", "LT");
+    watch_display_text(WATCH_POSITION_TOP, "LT");
     watch_display_text(WATCH_POSITION_BOTTOM, " red  ");
     if (subsecond % 2) {
         sprintf(buf, "%2d", color.red);
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+        watch_display_text(WATCH_POSITION_TOP, buf);
     } else {
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_TOP, "  ");
     }
 }
 
@@ -257,13 +257,13 @@ static void green_led_setting_display(uint8_t subsecond) {
     char buf[8];
     movement_color_t color = movement_backlight_color();
 
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LED", "LT");
+    watch_display_text(WATCH_POSITION_TOP, "LT");
     watch_display_text(WATCH_POSITION_BOTTOM, " green");
     if (subsecond % 2) {
         sprintf(buf, "%2d", color.green);
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+        watch_display_text(WATCH_POSITION_TOP, buf);
     } else {
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_TOP, "  ");
     }
 }
 
@@ -277,13 +277,13 @@ static void blue_led_setting_display(uint8_t subsecond) {
     char buf[8];
     movement_color_t color = movement_backlight_color();
 
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LED", "LT");
-    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "blue  ", " blue ");
+    watch_display_text(WATCH_POSITION_TOP, "LT");
+    watch_display_text(WATCH_POSITION_BOTTOM, " blue ");
     if (subsecond % 2) {
         sprintf(buf, "%2d", color.blue);
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+        watch_display_text(WATCH_POSITION_TOP, buf);
     } else {
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_TOP, "  ");
     }
 }
 
@@ -298,7 +298,7 @@ static void  git_hash_setting_display(uint8_t subsecond) {
     char buf[8];
     // BUILD_GIT_HASH will already be truncated to 6 characters in the makefile, but this is to be safe.
     sprintf(buf, "%.6s", BUILD_GIT_HASH);
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Bu{d ", "bU");
+    watch_display_text(WATCH_POSITION_TOP, "bU");
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
@@ -398,7 +398,7 @@ bool settings_face_loop(movement_event_t event, void *context) {
     settings_state_t *state = (settings_state_t *)context;
 
     switch (event.event_type) {
-        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_KEYPAD_BUTTON_DOWN:
             state->current_page = (state->current_page + 1) % state->num_settings;
             watch_clear_display();
             // fall through
@@ -410,7 +410,7 @@ bool settings_face_loop(movement_event_t event, void *context) {
             movement_force_led_off();
             movement_move_to_next_face();
             return true;
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ADJUST_BUTTON_UP:
             state->settings_screens[state->current_page].advance();
             break;
         case EVENT_TIMEOUT:

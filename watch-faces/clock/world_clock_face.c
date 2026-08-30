@@ -47,76 +47,31 @@ static void persist_world_clock_settings(world_clock_state_t *state) {
 }
 
 static void advance_character_at_position(char *character, uint8_t position) {
-    bool is_custom_lcd = watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM;
-    if (is_custom_lcd || position == 0) {
-        // On custom LCD and classic's position 0 we support all characters.
-        // All we need to do is jump around the ASCII table to the useful ones.
-        switch (*character) {
-            case ' ':
-                *character = 'A';
-                break;
-            case 'z':
-                *character = '0';
-                break;
-            case '9':
-                *character = '{';
-                break;
-            case '}':
-                *character = '*';
-                break;
-            case '.':
-                *character = '/';
-                break;
-            case '/':
-            case 0x7F: // failsafe: if they've broken out of the intended rotation, return them to 0x20
-                *character = ' ';
-                break;
-            default:
-                *character += 1;
-                break;
-        }
-    } else {
-        // otherwise we have to do some wacky shit
-        switch (*character) {
-            case ' ':
-                *character = 'A';
-                break;
-            case 'F':
-            case 'J':
-            case 'L':
-            case 'R':
-            case '1':
-                *character += 2;
-                break;
-            case 'H':
-                *character = 'l';
-                break;
-            case 'l':
-                *character = 'J';
-                break;
-            case 'O':
-                *character = 'R';
-                break;
-            case 'U':
-                *character = 'X';
-                break;
-            case 'X':
-                *character = '0';
-                break;
-            case '3':
-                *character = '7';
-                break;
-            case '8':
-                *character = '{';
-                break;
-            case '{':
-            case 0x7F: // failsafe: if they've broken out of the intended rotation, return them to 0x20
-                *character = ' ';
-                break;
-            default:
-                *character += 1;
-                break;
-        }
+    // On custom LCD and classic's position 0 we support all characters.
+    // All we need to do is jump around the ASCII table to the useful ones.
+    switch (*character) {
+        case ' ':
+            *character = 'A';
+            break;
+        case 'z':
+            *character = '0';
+            break;
+        case '9':
+            *character = '{';
+            break;
+        case '}':
+            *character = '*';
+            break;
+        case '.':
+            *character = '/';
+            break;
+        case '/':
+        case 0x7F: // failsafe: if they've broken out of the intended rotation, return them to 0x20
+            *character = ' ';
+            break;
+        default:
+            *character += 1;
+            break;
     }
 }
 
@@ -166,7 +121,7 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
     watch_date_time_t date_time;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_24H);
+            if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_AM);
             watch_set_colon();
             state->previous_date_time = 0xFFFFFFFF;
             // fall through
@@ -202,11 +157,8 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
                 }
                 watch_display_character(state->settings.bit.char_0, 0);
                 watch_display_character(state->settings.bit.char_1, 1);
-                if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-                    watch_display_character(state->settings.bit.char_2, 10);
-                }
                 sprintf(buf, "%2d%2d%02d%02d", date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
-                watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+                watch_display_text(WATCH_POSITION_TOP, buf);
                 watch_display_text(WATCH_POSITION_HOURS, buf + 2);
                 watch_display_text(WATCH_POSITION_MINUTES, buf + 4);
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE) {
@@ -220,7 +172,7 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
                 }
             }
             break;
-        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_ADJUST_LONG_PRESS:
             movement_request_tick_frequency(4);
             state->current_screen = 1;
             break;
@@ -232,17 +184,15 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
 }
 
 static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clock_state_t *state) {
-    bool is_custom_lcd;
 
     switch (event.event_type) {
         case EVENT_MODE_BUTTON_UP:
             persist_world_clock_settings(state);
             movement_move_to_next_face();
             return false;
-        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_KEYPAD_BUTTON_DOWN:
             state->current_screen++;
-            is_custom_lcd = watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM;
-            if ((is_custom_lcd && state->current_screen > 4) || (!is_custom_lcd && state->current_screen > 3)) {
+            if (state->current_screen > 3) {
                 movement_request_tick_frequency(1);
                 _update_timezone_offset(state);
                 state->current_screen = 0;
@@ -251,7 +201,7 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
                 return world_clock_face_do_display_mode(event, state);
             }
             break;
-        case EVENT_ALARM_BUTTON_DOWN:
+        case EVENT_ADJUST_BUTTON_DOWN:
             switch (state->current_screen) {
                 case 1:
                     advance_character_at_position(&state->settings.bit.char_0, 0);
@@ -260,10 +210,6 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
                     advance_character_at_position(&state->settings.bit.char_1, 1);
                     break;
                 case 3:
-                    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-                        advance_character_at_position(&state->settings.bit.char_2, 2);
-                        break;
-                    }
                     // fall through
                 case 4:
                     state->settings.bit.timezone_index++;
@@ -297,10 +243,6 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
                 buf[state->current_screen - 1] = '_';
                 break;
             case 3:
-                if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-                    buf[10] = '_';
-                    break;
-                }
                 // fall through
             case 4:
                 memcpy(buf + 4, "      ", 6);

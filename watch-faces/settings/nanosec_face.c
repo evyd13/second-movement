@@ -175,31 +175,31 @@ static void nanosec_update_display() {
 
     switch (nanosec_screen) {
         case 0:
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "FCorr", "FC");
+            watch_display_text(WATCH_POSITION_TOP, "FC");
             sprintf(buf, "%6d", nanosec_state.freq_correction);
             break;
         case 1:
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "CTMP ", "T0");
+            watch_display_text(WATCH_POSITION_TOP, "T0");
             sprintf(buf, "%6d", nanosec_state.center_temperature);
             break;
         case 2:
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "2Coef", "2C");
+            watch_display_text(WATCH_POSITION_TOP, "2C");
             sprintf(buf, "%6d", nanosec_state.quadratic_tempco);
             break;
         case 3:
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "3Coef", "3C");
+            watch_display_text(WATCH_POSITION_TOP, "3C");
             sprintf(buf, "%6d", nanosec_state.cubic_tempco);
             break;
         case 4: // Profile
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "PROFL", "PR");
+            watch_display_text(WATCH_POSITION_TOP, "PR");
             sprintf(buf, "    P%1d", nanosec_state.correction_profile);
             break;
         case 5: // Cadence
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "Cadnc", "CD");
+            watch_display_text(WATCH_POSITION_TOP, "CD");
             sprintf(buf, "    %2d", nanosec_state.correction_cadence);
             break;
         case 6: // Aging
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "AgeCo", "CD");
+            watch_display_text(WATCH_POSITION_TOP, "CD");
             sprintf(buf, "%6d", nanosec_state.aging_ppm_pa);
             break;
     }
@@ -291,10 +291,10 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
         case EVENT_MODE_LONG_PRESS:
             nanosec_next_edit_screen();
             break;
-        case EVENT_LIGHT_BUTTON_UP:
+        case EVENT_KEYPAD_BUTTON_UP:
             value_increase(1);
             break;
-        case EVENT_LIGHT_LONG_PRESS:
+        case EVENT_KEYPAD_LONG_PRESS:
             if (nanosec_screen == 4) { // If we are in profile - apply profiles
                 nanosec_init_profile();
                 nanosec_screen = 0;
@@ -303,10 +303,10 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
                 value_increase(50);
             }
             break;
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ADJUST_BUTTON_UP:
             value_increase(-1);
             break;
-        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_ADJUST_LONG_PRESS:
             if (nanosec_screen == 4) { // If we are in profile - still decrease by 1
                 value_increase(-1);
             } else {
@@ -349,7 +349,7 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
             apply_RTC_correction(correction);
         }
             break;
-        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_KEYPAD_BUTTON_DOWN:
             // don't light up every time light is hit
             break;
         default:

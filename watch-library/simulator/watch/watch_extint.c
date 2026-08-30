@@ -162,12 +162,12 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_inte
             trigger = external_interrupt_mode_trigger;
             break;
         case BTN_ID_LIGHT:
-            HAL_GPIO_BTN_LIGHT_write(level);
+            HAL_GPIO_BTN_KEYPAD_write(level);
             callback = external_interrupt_light_callback;
             trigger = external_interrupt_light_trigger;
             break;
         case BTN_ID_ALARM:
-            HAL_GPIO_BTN_ALARM_write(level);
+            HAL_GPIO_BTN_ADJUST_write(level);
             callback = external_interrupt_alarm_callback;
             trigger = external_interrupt_alarm_trigger;
             break;
@@ -197,10 +197,10 @@ void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, e
     if (pin == HAL_GPIO_BTN_MODE_pin()) {
         external_interrupt_mode_callback = callback;
         external_interrupt_mode_trigger = trigger;
-    } else if (pin == HAL_GPIO_BTN_LIGHT_pin()) {
+    } else if (pin == HAL_GPIO_BTN_KEYPAD_pin()) {
         external_interrupt_light_callback = callback;
         external_interrupt_light_trigger = trigger;
-    } else if (pin == HAL_GPIO_BTN_ALARM_pin()) {
+    } else if (pin == HAL_GPIO_BTN_ADJUST_pin()) {
         external_interrupt_alarm_callback = callback;
         external_interrupt_alarm_trigger = trigger;
     }

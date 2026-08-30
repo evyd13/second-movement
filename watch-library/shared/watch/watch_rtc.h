@@ -39,7 +39,7 @@
   */
 /// @{
 
-extern watch_cb_t btn_alarm_callback;
+extern watch_cb_t btn_mode_callback;
 extern watch_cb_t a2_callback;
 extern watch_cb_t a4_callback;
 extern watch_cb_t comp_callback;

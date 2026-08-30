@@ -42,7 +42,7 @@ tusb_desc_device_t const desc_device = {
     .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
     .idVendor           = 0x1209,
-    .idProduct          = 0x2151,
+    .idProduct          = 0x8008,
     .bcdDevice          = 0x0100,
 
     .iManufacturer      = 0x01,
@@ -99,8 +99,8 @@ static char serialnum[32 * 2 + 1] = {'\0'}; // 2 chars per hexnumber + '\0'
 // array of pointer to string descriptors
 char const* string_desc_arr [] = {
     (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
-    "Oddly Specific Objects",       // 1: Manufacturer
-    "Sensor Watch",                 // 2: Product
+    "Evelien Dekkers",       // 1: Manufacturer
+    "Outatime Pro",                 // 2: Product
     serialnum,                      // 3: Serial number
     "TinyUSB CDC",                  // 4: CDC Interface
 };

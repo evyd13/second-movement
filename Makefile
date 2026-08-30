@@ -3,15 +3,8 @@ GOSSAMER_PATH=gossamer
 
 # Which board are we building for? Commented out to force a choice when building.
 # Options are:
-# - sensorwatch_pro
-# - sensorwatch_green
-# - sensorwatch_red (also known as Sensor Watch Lite)
-# - sensorwatch_blue
 # - outatime_pro
 # BOARD=outatime_pro
-
-# Set this to the type of display in your watch: classic, custom or calculator. Commented out to force a choice when building.
-# DISPLAY=calculator
 
 # End of user configurable options.
 
@@ -35,25 +28,7 @@ endef
 ifeq (,$(filter clean,$(MAKECMDGOALS)))
   ifeq (,$(filter install,$(MAKECMDGOALS)))
     ifndef BOARD
-      $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red DISPLAY=display_type$n    make BOARD=sensorwatch_blue DISPLAY=display_type$n    make BOARD=sensorwatch_pro DISPLAY=display_type$n$n)
-    endif
-  endif
-
-  ifeq (,$(filter install,$(MAKECMDGOALS)))
-    ifndef DISPLAY
-      $(error Build failed: DISPLAY not defined. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
-    else
-      ifeq ($(DISPLAY), custom)
-        DEFINES += -DFORCE_CUSTOM_LCD_TYPE
-      else ifeq ($(DISPLAY), classic)
-        DEFINES += -DFORCE_CLASSIC_LCD_TYPE
-      else ifeq ($(DISPLAY), calculator)
-        DEFINES += -DFORCE_CALCULATOR_LCD_TYPE
-      else ifeq ($(DISPLAY), autodetect)
-        $(warning WARNING: LCD autodetection is experimental and not reliable! We suggest specifying DISPLAY=classic or DISPLAY=custom for reliable operation.)
-      else
-        $(error Build failed: invalid DISPLAY type. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
-      endif
+      $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=outatime_pro$n)
     endif
   endif
 endif
@@ -88,7 +63,6 @@ INCLUDES += \
   -I./watch-faces/demo \
   -I./watch-faces/sensor \
   -I./watch-faces/settings \
-  -I./watch-faces/io \
 
 # Add your source files here.
 SRCS += \

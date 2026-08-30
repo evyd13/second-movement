@@ -30,7 +30,7 @@
 static void _voltage_face_update_display(void) {
     float voltage = (float)watch_get_vcc_voltage() / 1000.0;
 
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "BAT", "BA");
+    watch_display_text(WATCH_POSITION_TOP, "BA");
     watch_display_float_with_best_effort(voltage, " V");
 }
 
@@ -63,14 +63,14 @@ bool voltage_face_loop(movement_event_t event, void *context) {
         case EVENT_LOW_ENERGY_UPDATE:
             // clear seconds area (on classic LCD) and start tick animation if necessary
             if (!watch_sleep_animation_is_running()) {
-                watch_display_text_with_fallback(WATCH_POSITION_SECONDS, " V", "  ");
+                watch_display_text(WATCH_POSITION_SECONDS, "  ");
                 watch_start_sleep_animation(1000);
             }
             // update once an hour
             if (date_time.unit.minute == 0) {
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
                 _voltage_face_update_display();
-                watch_display_text_with_fallback(WATCH_POSITION_SECONDS, " V", "  ");
+                watch_display_text(WATCH_POSITION_SECONDS, "  ");
             }
             break;
         default:

@@ -117,25 +117,25 @@ typedef enum {
     EVENT_BACKGROUND_TASK,      // Your watch face is being invoked to perform a background task. Don't update the display here; you may not be in the foreground.
     EVENT_TIMEOUT,              // Your watch face has been inactive for a while. You may want to resign, depending on your watch face's intended use case.
 
-    EVENT_LIGHT_BUTTON_DOWN,    // The light button has been pressed, but not yet released.
-    EVENT_LIGHT_BUTTON_UP,      // The light button was pressed for less than half a second, and released.
-    EVENT_LIGHT_LONG_PRESS,     // The light button was held for over half a second, but not yet released.
-    EVENT_LIGHT_LONG_UP,        // The light button was held for over half a second, and released.
-    EVENT_LIGHT_REALLY_LONG_PRESS, // The light button was held for more than 1.5 second, note yet released.
-    // EVENT_LIGHT_REALLY_LONG_UP, // The light button was held for more than 1.5 second, and released.
+    EVENT_KEYPAD_BUTTON_DOWN,    // The light button has been pressed, but not yet released.
+    EVENT_KEYPAD_BUTTON_UP,      // The light button was pressed for less than half a second, and released.
+    EVENT_KEYPAD_LONG_PRESS,     // The light button was held for over half a second, but not yet released.
+    EVENT_KEYPAD_LONG_UP,        // The light button was held for over half a second, and released.
+    EVENT_KEYPAD_REALLY_LONG_PRESS, // The light button was held for more than 1.5 second, note yet released.
+
     EVENT_MODE_BUTTON_DOWN,     // The mode button has been pressed, but not yet released.
     EVENT_MODE_BUTTON_UP,       // The mode button was pressed for less than half a second, and released.
     EVENT_MODE_LONG_PRESS,      // The mode button was held for over half a second, but not yet released.
     EVENT_MODE_LONG_UP,         // The mode button was held for over half a second, and released. NOTE: your watch face will resign immediately after receiving this event.
     EVENT_MODE_REALLY_LONG_PRESS, // The mode button was held for more than 1.5 second, note yet released.
     // EVENT_MODE_REALLY_LONG_UP, // The mode button was held for more than 1.5 second, and released.
-    EVENT_ALARM_BUTTON_DOWN,    // The alarm button has been pressed, but not yet released.
-    EVENT_ALARM_BUTTON_UP,      // The alarm button was pressed for less than half a second, and released.
-    EVENT_ALARM_LONG_PRESS,     // The alarm button was held for over half a second, but not yet released.
-    EVENT_ALARM_LONG_UP,        // The alarm button was held for over half a second, and released.
-    EVENT_ALARM_REALLY_LONG_PRESS, // The alarm button was held for more than 1.5 second, note yet released.
-    // EVENT_ALARM_REALLY_LONG_UP, // The alarm button was held for more than 1.5 second, and released.
-
+    EVENT_ADJUST_BUTTON_DOWN,    // The adjust button has been pressed, but not yet released.
+    EVENT_ADJUST_BUTTON_UP,      // The adjust button was pressed for less than half a second, and released.
+    EVENT_ADJUST_LONG_PRESS,     // The adjust button was held for over half a second, but not yet released.
+    EVENT_ADJUST_LONG_UP,        // The adjust button was held for over half a second, and released.
+    EVENT_ADJUST_REALLY_LONG_PRESS, // The adjust button was held for more than 1.5 second, note yet released.
+    // EVENT_ADJUST_REALLY_LONG_UP, // The adjust button was held for more than 1.5 second, and released.
+    
     EVENT_ACCELEROMETER_WAKE,   // The accelerometer has detected motion and woken up.
     EVENT_SINGLE_TAP,           // Accelerometer detected a single tap. This event is not yet implemented.
     EVENT_DOUBLE_TAP,           // Accelerometer detected a double tap. This event is not yet implemented.
@@ -143,9 +143,9 @@ typedef enum {
 
 // Each different timeout type will use a different index when invoking watch_rtc_register_comp_callback
 typedef enum {
-    LIGHT_BUTTON_TIMEOUT = 0,   // Light button longpress timeout
+    KEYPAD_BUTTON_TIMEOUT = 0,   // keypad button longpress timeout
     MODE_BUTTON_TIMEOUT,        // Mode button longpress timeout
-    ALARM_BUTTON_TIMEOUT,       // Alarm button longpress timeout
+    ADJUST_BUTTON_TIMEOUT,       // Adjust button longpress timeout
     LED_TIMEOUT,                // LED off timeout
     RESIGN_TIMEOUT,             // Resign active face timeout
     SLEEP_TIMEOUT,              // Low-energy begin timeout

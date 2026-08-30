@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Joey Castillo
+ * Copyright (c) 2022 Wesley Ellis
+ * Copyright (c) 2022 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,35 +23,39 @@
  * SOFTWARE.
  */
 
-#pragma once
+#ifndef CALCULATOR_FACE_H_
+#define CALCULATOR_FACE_H_
+
+/*
+ * STOPWATCH FACE
+ *
+ * The Stopwatch face provides basic stopwatch functionality: you can start
+ * and stop the stopwatch with the alarm button. Pressing the light button
+ * when the timer is stopped resets it.
+ *
+ * This face does not count sub-seconds.
+ * See also: "fast_calculator_face.h"
+ */
 
 #include "movement.h"
 
-#ifdef HAS_IR_SENSOR
-
-/*
- * LIGHT SENSOR PLAYGROUND
- *
- * Temporary watch face for playing with the light sensor.
- *
- */
-
 typedef struct {
-    // Anything you need to keep track of, put it here!
-    uint8_t unused;
-} irda_demo_state_t;
+    bool running;
+    watch_date_time_t start_time; // while running, show the difference between this time and now
+    uint32_t seconds_counted;   // set this value when paused, and show that instead.
+} calculator_state_t;
 
-void irda_upload_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void irda_upload_face_activate(void *context);
-bool irda_upload_face_loop(movement_event_t event, void *context);
-void irda_upload_face_resign(void *context);
+void calculator_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void calculator_face_activate(void *context);
+bool calculator_face_loop(movement_event_t event, void *context);
+void calculator_face_resign(void *context);
 
-#define irda_upload_face ((const watch_face_t){ \
-    irda_upload_face_setup, \
-    irda_upload_face_activate, \
-    irda_upload_face_loop, \
-    irda_upload_face_resign, \
+#define calculator_face ((const watch_face_t){ \
+    calculator_face_setup, \
+    calculator_face_activate, \
+    calculator_face_loop, \
+    calculator_face_resign, \
     NULL, \
 })
 
-#endif // HAS_IR_SENSOR
+#endif // calculator_FACE_H_

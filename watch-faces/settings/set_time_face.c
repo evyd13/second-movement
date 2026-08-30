@@ -36,7 +36,7 @@ const char set_time_face_fallback_titles[SET_TIME_FACE_NUM_SETTINGS][3] = {"YR",
 static bool _quick_ticks_running;
 static int32_t current_offset;
 
-static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_page) {
+static void _handle_adjust_button(watch_date_time_t date_time, uint8_t current_page) {
     // handles short or long pressing of the alarm button
 
     switch (current_page) {
@@ -95,26 +95,26 @@ bool set_time_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_TICK:
             if (_quick_ticks_running) {
-                if (HAL_GPIO_BTN_ALARM_read()) _handle_alarm_button(date_time, current_page);
+                if (HAL_GPIO_BTN_ADJUST_read()) _handle_adjust_button(date_time, current_page);
                 else _abort_quick_ticks();
             }
             break;
-        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_ADJUST_LONG_PRESS:
             if (current_page != 6) {
                 _quick_ticks_running = true;
                 movement_request_tick_frequency(8);
             }
             break;
-        case EVENT_ALARM_LONG_UP:
+        case EVENT_ADJUST_LONG_UP:
             _abort_quick_ticks();
             break;
-        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_KEYPAD_BUTTON_DOWN:
             current_page = (current_page + 1) % SET_TIME_FACE_NUM_SETTINGS;
             *((uint8_t *)context) = current_page;
             break;
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ADJUST_BUTTON_UP:
             _abort_quick_ticks();
-            _handle_alarm_button(date_time, current_page);
+            _handle_adjust_button(date_time, current_page);
             break;
         case EVENT_TIMEOUT:
             _abort_quick_ticks();
@@ -125,12 +125,11 @@ bool set_time_face_loop(movement_event_t event, void *context) {
     }
 
     char buf[11];
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, (char *) set_time_face_titles[current_page], (char *) set_time_face_fallback_titles[current_page]);
+    watch_display_text(WATCH_POSITION_TOP, (char *) set_time_face_fallback_titles[current_page]);
     if (current_page == 3) {
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, " Z");
-        if (current_offset < 0) watch_display_text(WATCH_POSITION_TOP_LEFT, "- ");
-        else watch_display_text(WATCH_POSITION_TOP_LEFT, "* ");
+        watch_display_text(WATCH_POSITION_TOP, " Z");
+        if (current_offset < 0) watch_display_text(WATCH_POSITION_TOP, "- ");
+        else watch_display_text(WATCH_POSITION_TOP, "* ");
         if (event.subsecond % 2) {
             uint8_t hours = abs(current_offset) / 3600;
             uint8_t minutes = (abs(current_offset) % 3600) / 60;
@@ -143,13 +142,13 @@ bool set_time_face_loop(movement_event_t event, void *context) {
         }
     } else if (current_page < 3) {
         watch_clear_colon();
-        watch_clear_indicator(WATCH_INDICATOR_24H);
+        watch_clear_indicator(WATCH_INDICATOR_AM);
         watch_clear_indicator(WATCH_INDICATOR_PM);
         sprintf(buf, "%2d%02d%02d", date_time.unit.year + 20, date_time.unit.month, date_time.unit.day);
     } else {
         watch_set_colon();
         if (movement_clock_mode_24h()) {
-            watch_set_indicator(WATCH_INDICATOR_24H);
+            watch_set_indicator(WATCH_INDICATOR_AM);
             sprintf(buf, "%2d%02d%02d", date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
         } else {
             sprintf(buf, "%2d%02d%02d", (date_time.unit.hour % 12) ? (date_time.unit.hour % 12) : 12, date_time.unit.minute, date_time.unit.second);

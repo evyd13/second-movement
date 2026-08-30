@@ -84,7 +84,7 @@ void _watch_init(void) {
     _watch_rtc_init();
 
     // set up state
-    btn_alarm_callback = NULL;
+    btn_mode_callback = NULL;
     a2_callback = NULL;
     a4_callback = NULL;
 }

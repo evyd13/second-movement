@@ -16,20 +16,13 @@ Building Second Movement
 You can build the default watch firmware with:
 
 ```
-make BOARD=board_type DISPLAY=display_type
+make BOARD=board_type
 ```
 
 where `board_type` is any of:
-- sensorwatch_pro
-- sensorwatch_green  
-- sensorwatch_red (also known as Sensor Watch Lite)
-- sensorwatch_blue
 - outatime_pro
 
-and `display_type` is any of:
-- classic
-- custom
-- calculator
+(I really wanted to include the other boards, but big changes had to be made for this watch.)
 
 Optionally you can set the watch time when building the firmware using `TIMESET=minute`. 
 
@@ -43,7 +36,7 @@ If you'd like to modify which faces are built and included in the firmware, edit
 
 Installing firmware to the watch
 ----------------------------
-To install the firmware onto your Sensor Watch board, plug the watch into your USB port and double tap the tiny Reset button on the back of the board. You should see the LED light up red and begin pulsing. (If it does not, make sure you didn’t plug the board in upside down). Once you see the `WATCHBOOT` drive appear on your desktop, type `make install`. This will convert your compiled program to a UF2 file, and copy it over to the watch.
+To install the firmware onto your Outatime Pro board, plug the watch into your USB port and double tap the tiny Reset button on the back of the board. You should see the LED light up red and begin pulsing. (If it does not, make sure you didn’t plug the board in upside down). Once you see the `WATCHBOOT` drive appear on your desktop, type `make install`. This will convert your compiled program to a UF2 file, and copy it over to the watch.
 
 If you want to do this step manually, copy `/build/firmware.uf2` to your watch. 
 
@@ -53,7 +46,7 @@ Emulating the firmware
 You may want to test out changes in the emulator first. To do this, you'll need to install [emscripten](https://emscripten.org/), then run:
 
 ```
-emmake make BOARD=outatime_pro DISPLAY=calculator
+emmake make BOARD=outatime_pro
 python3 -m http.server -d build-sim
 ```
 

@@ -44,7 +44,7 @@ void finetune_face_activate(void *context) {
     (void) context;
 
     // Handle any tasks related to your watch face coming on screen.
-    watch_display_text(WATCH_POSITION_TOP_LEFT, "FT");
+    watch_display_text(WATCH_POSITION_TOP, "FT");
     total_adjustment = 0;
     finetune_page = 0;
 }
@@ -62,30 +62,28 @@ static void finetune_update_display(void) {
     char buf[25];
 
     if (finetune_page == 0) {
-        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "FTU", "FT");
+        watch_display_text(WATCH_POSITION_TOP, "FT");
         watch_date_time_t date_time = movement_get_utc_date_time();
         sprintf(buf, "%04d%02d", abs(total_adjustment), date_time.unit.second);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
         if (total_adjustment < 0) {
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, "--");
+            watch_display_text(WATCH_POSITION_TOP, "--");
         } else {
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+            watch_display_text(WATCH_POSITION_TOP, "  ");
         }
     } else if (finetune_page == 1) {
         float hours = finetune_get_hours_passed();
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-        watch_display_text_with_fallback(WATCH_POSITION_TOP, "DELtA", "DT");
+        watch_display_text(WATCH_POSITION_TOP, "DT");
         sprintf(buf, "%4d%02d", (int)hours, (int)(fmodf(hours, 1.) * 100));
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     } else if (finetune_page == 2) {
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Frq", " F");
+        watch_display_text(WATCH_POSITION_TOP, " F");
         if (finetune_get_hours_passed() < 6) {
             watch_display_text(WATCH_POSITION_BOTTOM, "6HR   ");
         } else {
             float correction = finetune_get_correction();
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, (total_adjustment < 0) ? " -" : "  ");
+            watch_display_text(WATCH_POSITION_TOP, (total_adjustment < 0) ? " -" : "  ");
 
             sprintf(buf, "%2d%04d", (int)fabsf(correction), (int)(fmodf(fabsf(correction), 1.) * 10000));
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
@@ -166,7 +164,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             finetune_update_display();
             break;
 
-        case EVENT_LIGHT_LONG_PRESS:
+        case EVENT_KEYPAD_LONG_PRESS:
             // We are making it slower by 250ms
             if (finetune_page == 0) {
                 finetune_adjust_subseconds(250);
@@ -177,14 +175,14 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             }
             break;
 
-        case EVENT_LIGHT_BUTTON_UP:
+        case EVENT_KEYPAD_BUTTON_UP:
             // We are making it slower by 25ms
             if (finetune_page == 0) {
                 finetune_adjust_subseconds(25);
             }
             break;
 
-        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_ADJUST_LONG_PRESS:
             if (finetune_page == 0) {
                 finetune_adjust_subseconds(750);
             } else if (finetune_page == 2) {
@@ -193,7 +191,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             }
             break;
 
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ADJUST_BUTTON_UP:
             if (finetune_page == 0) {
                 finetune_adjust_subseconds(975);
             }
@@ -213,7 +211,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             // watch_start_sleep_animation(500);
             break;
 
-        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_KEYPAD_BUTTON_DOWN:
             // don't light up every time light is hit
             break;
         default:

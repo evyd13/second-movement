@@ -59,7 +59,7 @@ static long alarm_interval_id = -1;
 static long alarm_timeout_id = -1;
 static double alarm_interval;
 watch_cb_t alarm_callback;
-watch_cb_t btn_alarm_callback;
+watch_cb_t btn_mode_callback;
 watch_cb_t a2_callback;
 watch_cb_t a4_callback;
 

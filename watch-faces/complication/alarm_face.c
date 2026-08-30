@@ -37,7 +37,7 @@ static void _alarm_face_display_alarm_time(alarm_face_state_t *state) {
     uint8_t hour = state->hour;
 
     if ( movement_clock_mode_24h() )
-        watch_set_indicator(WATCH_INDICATOR_24H);
+        watch_set_indicator(WATCH_INDICATOR_AM);
     else {
         if ( hour >= 12 ) watch_set_indicator(WATCH_INDICATOR_PM);
         else watch_clear_indicator(WATCH_INDICATOR_PM);
@@ -85,7 +85,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "ALM", "AL");
+            watch_display_text(WATCH_POSITION_TOP, "AL");
             if (state->alarm_is_on) watch_set_indicator(WATCH_INDICATOR_SIGNAL);
             watch_set_colon();
             _alarm_face_display_alarm_time(state);
@@ -100,7 +100,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
             if (event.subsecond % 2 == 0) 
                 watch_display_text((state->setting_mode == ALARM_FACE_SETTING_MODE_SETTING_HOUR) ? WATCH_POSITION_HOURS : WATCH_POSITION_MINUTES, "  ");
             break;
-        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_KEYPAD_BUTTON_DOWN:
             switch (state->setting_mode) {
                 case ALARM_FACE_SETTING_MODE_NONE:
                     // If we're not in a setting mode, turn on the LED like normal.
@@ -124,7 +124,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                     break;
             }
             break;
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ADJUST_BUTTON_UP:
             if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
                 // in normal mode, toggle alarm on/off.
                 state->alarm_is_on ^= 1;
@@ -137,10 +137,10 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                 }
             }
             break;
-        case EVENT_ALARM_BUTTON_DOWN:
+        case EVENT_ADJUST_BUTTON_DOWN:
             switch (state->setting_mode) {
                 case ALARM_FACE_SETTING_MODE_NONE:
-                    // nothing to do here, alarm toggle is handled in EVENT_ALARM_BUTTON_UP.
+                    // nothing to do here, alarm toggle is handled in EVENT_ADJUST_BUTTON_UP.
                     break;
                 case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
                     // increment hour, wrap around to 0 at 23.
@@ -153,7 +153,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
             }
             _alarm_face_display_alarm_time(state);
             break;
-        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_ADJUST_LONG_PRESS:
             if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
                 // long press in normal mode: move to hour setting mode, request fast tick.
                 state->setting_mode = ALARM_FACE_SETTING_MODE_SETTING_HOUR;

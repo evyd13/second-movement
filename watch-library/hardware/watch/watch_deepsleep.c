@@ -41,13 +41,14 @@ void sleep(const uint8_t mode) {
 }
 
 void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool level) {
+    // TODO: add keypad wakeup
     uint32_t config = RTC->MODE0.TAMPCTRL.reg;
 
-    if (pin == HAL_GPIO_BTN_ALARM_pin()) {
-        HAL_GPIO_BTN_ALARM_in();
-        HAL_GPIO_BTN_ALARM_pulldown();
-        HAL_GPIO_BTN_ALARM_pmuxen(HAL_GPIO_PMUX_RTC);
-        btn_alarm_callback = callback;
+    if (pin == HAL_GPIO_BTN_MODE_pin()) {
+        HAL_GPIO_BTN_MODE_in();
+        HAL_GPIO_BTN_MODE_pulldown();
+        HAL_GPIO_BTN_MODE_pmuxen(HAL_GPIO_PMUX_RTC);
+        btn_mode_callback = callback;
         config &= ~(3 << RTC_TAMPCTRL_IN2ACT_Pos);
         config &= ~(1 << RTC_TAMPCTRL_TAMLVL2_Pos);
         config |= 1 << RTC_TAMPCTRL_IN2ACT_Pos;
@@ -88,8 +89,8 @@ void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool leve
 void watch_disable_extwake_interrupt(uint8_t pin) {
     uint32_t config = RTC->MODE0.TAMPCTRL.reg;
 
-    if (pin == HAL_GPIO_BTN_ALARM_pin()) {
-        btn_alarm_callback = NULL;
+    if (pin == HAL_GPIO_BTN_MODE_pin()) {
+        btn_mode_callback = NULL;
         config &= ~(3 << RTC_TAMPCTRL_IN2ACT_Pos);
     } else if (pin == HAL_GPIO_A2_pin()) {
         a2_callback = NULL;

@@ -59,7 +59,7 @@ static void clock_indicate_time_signal(clock_state_t *state) {
 }
 
 static void clock_indicate_24h() {
-    clock_indicate(WATCH_INDICATOR_24H, !!movement_clock_mode_24h());
+    clock_indicate(WATCH_INDICATOR_AM, !!movement_clock_mode_24h());
 }
 
 static bool clock_is_pm(watch_date_time_t date_time) {
@@ -73,13 +73,8 @@ static void clock_indicate_pm(watch_date_time_t date_time) {
 
 static void clock_indicate_low_available_power(clock_state_t *state) {
     // Set the low battery indicator if battery power is low
-    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-        // interlocking arrows imply "exchange" the battery.
-        clock_indicate(WATCH_INDICATOR_ARROWS, state->battery_low);
-    } else {
-        // LAP indicator on classic LCD is an adequate fallback.
-        clock_indicate(WATCH_INDICATOR_LAP, state->battery_low);
-    }
+    // MINUS indicator on classic LCD is an adequate fallback.
+    clock_indicate(WATCH_INDICATOR_MINUS, state->battery_low);
 }
 
 static watch_date_time_t clock_24h_to_12h(watch_date_time_t date_time) {
@@ -123,8 +118,7 @@ static void clock_display_all(watch_date_time_t date_time) {
         date_time.unit.second
     );
 
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, watch_utility_get_long_weekday(date_time), watch_utility_get_weekday(date_time));
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+    watch_display_text(WATCH_POSITION_TOP, buf);
     watch_display_text(WATCH_POSITION_BOTTOM, buf + 2);
 }
 
@@ -132,8 +126,8 @@ static bool clock_display_some(watch_date_time_t current, watch_date_time_t prev
     if ((current.reg >> 6) == (previous.reg >> 6)) {
         // everything before seconds is the same, don't waste cycles setting those segments.
 
-        watch_display_character_lp_seconds('0' + current.unit.second / 10, 8);
-        watch_display_character_lp_seconds('0' + current.unit.second % 10, 9);
+        watch_display_character_lp_seconds('0' + current.unit.second / 10, 9);
+        watch_display_character_lp_seconds('0' + current.unit.second % 10, 10);
 
         return true;
 
@@ -187,8 +181,7 @@ static void clock_display_low_energy(watch_date_time_t date_time) {
         date_time.unit.minute
     );
 
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, watch_utility_get_long_weekday(date_time), watch_utility_get_weekday(date_time));
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+    watch_display_text(WATCH_POSITION_TOP, buf);
     watch_display_text(WATCH_POSITION_BOTTOM, buf + 2);
 }
 
@@ -252,7 +245,7 @@ bool clock_face_loop(movement_event_t event, void *context) {
             state->date_time.previous = current;
 
             break;
-        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_ADJUST_LONG_PRESS:
             clock_toggle_time_signal(state);
             break;
         case EVENT_BACKGROUND_TASK:
