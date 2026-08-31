@@ -40,10 +40,45 @@ static eic_interrupt_trigger_t external_interrupt_light_trigger = INTERRUPT_TRIG
 static watch_cb_t external_interrupt_alarm_callback = NULL;
 static eic_interrupt_trigger_t external_interrupt_alarm_trigger = INTERRUPT_TRIGGER_NONE;
 
-#define BTN_ID_ALARM 3
-#define BTN_ID_LIGHT 1
-#define BTN_ID_MODE 2
-static const uint8_t BTN_IDS[] = { BTN_ID_ALARM, BTN_ID_LIGHT, BTN_ID_MODE };
+#define BTN_ID_MODE 1 // a
+#define BTN_ID_ADJUST 2 // b
+#define BTN_ID_K0 3 // c
+#define BTN_ID_K1 4 // d
+#define BTN_ID_K2 5 // e
+#define BTN_ID_K3 6 // f
+#define BTN_ID_K4 7 // g
+#define BTN_ID_K5 8 // h
+#define BTN_ID_K6 9 // i
+#define BTN_ID_K7 10 // j
+#define BTN_ID_K8 11 // k
+#define BTN_ID_K9 12 // l
+#define BTN_ID_DI 13 // m
+#define BTN_ID_TI 14 // n
+#define BTN_ID_MI 15 // o
+#define BTN_ID_PL 16 // p
+#define BTN_ID_DE 17 // q
+#define BTN_ID_EQ 18 // r
+
+static const uint8_t BTN_IDS[] = {
+    BTN_ID_MODE,
+    BTN_ID_ADJUST,
+    BTN_ID_K0,
+    BTN_ID_K1,
+    BTN_ID_K2,
+    BTN_ID_K3,
+    BTN_ID_K4,
+    BTN_ID_K5,
+    BTN_ID_K6,
+    BTN_ID_K7,
+    BTN_ID_K8,
+    BTN_ID_K9,
+    BTN_ID_DI,
+    BTN_ID_TI,
+    BTN_ID_MI,
+    BTN_ID_PL,
+    BTN_ID_DE,
+    BTN_ID_EQ,
+};
 static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_interrupt_trigger_t trigger);
 
 static EM_BOOL watch_invoke_key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *userData) {
@@ -51,44 +86,45 @@ static EM_BOOL watch_invoke_key_callback(int eventType, const EmscriptenKeyboard
 
     uint8_t button_id;
     const char *key = keyEvent->key;
-    if (key[1] == 0) {
-        // event is from a plain letter key
-        switch (key[0]) {
-            case 'A':
-            case 'a':
-                button_id = BTN_ID_ALARM;
-                break;
-            case 'L':
-            case 'l':
-                button_id = BTN_ID_LIGHT;
-                break;
-            case 'M':
-            case 'm':
-                button_id = BTN_ID_MODE;
-                break;
-            default:
-                return EM_FALSE;
-        }
-    } else if (strncmp(key, "Arrow", 5) == 0) {
-        // event is from one of the arrow keys
-        switch(key[5]) {
-            case 'U': // ArrowUp
-                button_id = BTN_ID_LIGHT;
-                break;
-            case 'D': // ArrowDown
-            case 'L': // ArrowLeft
-                button_id = BTN_ID_MODE;
-                break;
-            case 'R': // ArrowRight
-                button_id = BTN_ID_ALARM;
-                break;
-            default:
-                return EM_FALSE;
-        }
-    } else {
-        // another kind of key
-        return EM_FALSE;
-    }
+    // TODOEEF: assign keyboard keys
+    // if (key[1] == 0) {
+    //     // event is from a plain letter key
+    //     switch (key[0]) {
+    //         case 'A':
+    //         case 'a':
+    //             button_id = BTN_ID_ALARM;
+    //             break;
+    //         case 'L':
+    //         case 'l':
+    //             button_id = BTN_ID_LIGHT;
+    //             break;
+    //         case 'M':
+    //         case 'm':
+    //             button_id = BTN_ID_MODE;
+    //             break;
+    //         default:
+    //             return EM_FALSE;
+    //     }
+    // } else if (strncmp(key, "Arrow", 5) == 0) {
+    //     // event is from one of the arrow keys
+    //     switch(key[5]) {
+    //         case 'U': // ArrowUp
+    //             button_id = BTN_ID_LIGHT;
+    //             break;
+    //         case 'D': // ArrowDown
+    //         case 'L': // ArrowLeft
+    //             button_id = BTN_ID_MODE;
+    //             break;
+    //         case 'R': // ArrowRight
+    //             button_id = BTN_ID_ALARM;
+    //             break;
+    //         default:
+    //             return EM_FALSE;
+    //     }
+    // } else {
+    //     // another kind of key
+    //     return EM_FALSE;
+    // }
 
     eic_interrupt_trigger_t trigger = eventType == EMSCRIPTEN_EVENT_KEYDOWN ? INTERRUPT_TRIGGER_RISING : INTERRUPT_TRIGGER_FALLING;
     return watch_invoke_interrupt_callback(button_id, trigger);
@@ -126,7 +162,7 @@ static void watch_install_button_callbacks(void) {
 
     for (int i = 0, count = sizeof(BTN_IDS) / sizeof(BTN_IDS[0]); i < count; i++) {
         char target[] = "#btn_";
-        target[4] = BTN_IDS[i] + '0';
+        target[4] = BTN_IDS[i] + '@';
 
         emscripten_set_mousedown_callback(target, (void *)&BTN_IDS[i], EM_FALSE, watch_invoke_mouse_callback);
         emscripten_set_mouseup_callback(target, (void *)&BTN_IDS[i], EM_FALSE, watch_invoke_mouse_callback);
@@ -161,12 +197,7 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_inte
             callback = external_interrupt_mode_callback;
             trigger = external_interrupt_mode_trigger;
             break;
-        case BTN_ID_LIGHT:
-            HAL_GPIO_BTN_KEYPAD_write(level);
-            callback = external_interrupt_light_callback;
-            trigger = external_interrupt_light_trigger;
-            break;
-        case BTN_ID_ALARM:
+        case BTN_ID_ADJUST:
             HAL_GPIO_BTN_ADJUST_write(level);
             callback = external_interrupt_alarm_callback;
             trigger = external_interrupt_alarm_trigger;
@@ -176,7 +207,7 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_inte
     }
 
     EM_ASM({
-        const classList = document.querySelector('#btn' + $0).classList;
+        const classList = document.querySelector('#btn' + String.fromCharCode(64+$0)).classList;
         const highlight = 'highlight';
         $1 ? classList.add(highlight) : classList.remove(highlight);
     }, button_id, level);
@@ -197,9 +228,6 @@ void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, e
     if (pin == HAL_GPIO_BTN_MODE_pin()) {
         external_interrupt_mode_callback = callback;
         external_interrupt_mode_trigger = trigger;
-    } else if (pin == HAL_GPIO_BTN_KEYPAD_pin()) {
-        external_interrupt_light_callback = callback;
-        external_interrupt_light_trigger = trigger;
     } else if (pin == HAL_GPIO_BTN_ADJUST_pin()) {
         external_interrupt_alarm_callback = callback;
         external_interrupt_alarm_trigger = trigger;

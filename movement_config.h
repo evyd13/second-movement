@@ -33,6 +33,7 @@ const watch_face_t watch_faces[] = {
     alarm_face,
     world_clock_face,
     stopwatch_face,
+    all_segments_face,
 
     voltage_face,
     settings_face,

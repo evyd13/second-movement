@@ -71,13 +71,11 @@ void watch_clear_display(void) {
 static void watch_invoke_blink_callback(void *userData) {
     blink_state = !blink_state;
     watch_display_character(blink_state ? blink_character : ' ', 7);
-    watch_clear_pixel(2, 10); // clear segment B of position 7 since it can't blink
 }
 
 void watch_start_character_blink(char character, uint32_t duration) {
     if (blink_interval_id != -1) return;
     watch_display_character(character, 7);
-    watch_clear_pixel(2, 10); // clear segment B of position 7 since it can't blink
 
     blink_state = true;
     blink_character = character;
@@ -97,11 +95,9 @@ void watch_stop_blink(void) {
 static void watch_invoke_tick_callback(void *userData) {
     tick_state = !tick_state;
     if (tick_state) {
-        watch_clear_pixel(0, 2);
-        watch_set_pixel(0, 3);
+        watch_clear_pixel(1, 21);
     } else {
-        watch_clear_pixel(0, 3);
-        watch_set_pixel(0, 2);
+        watch_set_pixel(1, 21);
     }
 }
 

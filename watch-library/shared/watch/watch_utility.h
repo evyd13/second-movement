@@ -50,11 +50,6 @@ typedef struct {
   */
 const char * watch_utility_get_weekday(watch_date_time_t date_time);
 
-/** @brief Returns a three-letter weekday for the given timestamp, suitable for display on the custom LCD
-  * @param date_time The watch_date_time_t whose weekday you want.
-  */
-const char * watch_utility_get_long_weekday(watch_date_time_t date_time);
-
 /** @brief Returns a number between 1-7 representing the weekday according to ISO8601 : week starts on Monday and has index 1, Sunday has index 7
  * @param year The year of the date
  * @param month The month of the date (1-12)

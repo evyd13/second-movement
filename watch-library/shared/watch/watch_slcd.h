@@ -73,11 +73,6 @@ typedef enum {
     WATCH_POSITION_SECONDS,     ///< Display 2 characters in the seconds portion of the main line.
 } watch_position_t;
 
-/// an enum describing the possible LCD types
-typedef enum {
-    WATCH_LCD_TYPE_UNKNOWN  = 0, ///< Value at boot: unknown LCD
-    WATCH_LCD_TYPE_CLASSIC  = 0b10101001, ///< The original CA-53W LCD
-} watch_lcd_type_t;
 
 /** @brief Enables the Segment LCD display.
   * Call this before attempting to set pixels or display strings.
@@ -90,14 +85,14 @@ void watch_disable_display(void);
 
 /** @brief Sets a pixel. Use this to manually set a pixel with a given common and segment number.
   *        See <a href="segmap.html">segmap.html</a>.
-  * @param com the common pin, numbered from 0-3.
+  * @param com the common pin, numbered from 0-2.
   * @param seg the segment pin, numbered from 0-30.
   */
 void watch_set_pixel(uint8_t com, uint8_t seg);
 
 /** @brief Clears a pixel. Use this to manually clear a pixel with a given common and segment number.
   *        See <a href="segmap.html">segmap.html</a>.
-  * @param com the common pin, numbered from 0-3.
+  * @param com the common pin, numbered from 0-2.
   * @param seg the segment pin, numbered from 0-30.
   */
 void watch_clear_pixel(uint8_t com, uint8_t seg);

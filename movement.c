@@ -1107,7 +1107,6 @@ void app_setup(void) {
 #endif
     }
 
-    // LCD autodetect uses the buttons as a a failsafe, so we should run it before we enable the button interrupts
     watch_enable_display();
 
     if (!movement_volatile_state.is_sleeping) {

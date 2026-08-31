@@ -66,9 +66,10 @@ static bool clock_is_pm(watch_date_time_t date_time) {
     return date_time.unit.hour >= 12;
 }
 
-static void clock_indicate_pm(watch_date_time_t date_time) {
+static void clock_indicate_pm_am(watch_date_time_t date_time) {
     if (movement_clock_mode_24h()) { return; }
     clock_indicate(WATCH_INDICATOR_PM, clock_is_pm(date_time));
+    clock_indicate(WATCH_INDICATOR_AM, !clock_is_pm(date_time));
 }
 
 static void clock_indicate_low_available_power(clock_state_t *state) {
@@ -106,20 +107,21 @@ static void clock_toggle_time_signal(clock_state_t *state) {
 }
 
 static void clock_display_all(watch_date_time_t date_time) {
-    char buf[8 + 1];
+    char buf[8+1];
 
     snprintf(
         buf,
         sizeof(buf),
-        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d%02d" : "%2d%2d%02d%02d",
-        date_time.unit.day,
+        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d" : "%2d%02d%02d",
         date_time.unit.hour,
         date_time.unit.minute,
         date_time.unit.second
     );
 
-    watch_display_text(WATCH_POSITION_TOP, buf);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf + 2);
+    watch_display_text(WATCH_POSITION_TOP, watch_utility_get_weekday(date_time));
+    watch_display_text(WATCH_POSITION_HOURS, buf);
+    watch_display_text(WATCH_POSITION_MINUTES, buf + 2);
+    watch_display_text(WATCH_POSITION_SECONDS, buf + 4);
 }
 
 static bool clock_display_some(watch_date_time_t current, watch_date_time_t previous) {
@@ -158,7 +160,7 @@ static bool clock_display_some(watch_date_time_t current, watch_date_time_t prev
 static void clock_display_clock(clock_state_t *state, watch_date_time_t current) {
     if (!clock_display_some(current, state->date_time.previous)) {
         if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
-            clock_indicate_pm(current);
+            clock_indicate_pm_am(current);
             current = clock_24h_to_12h(current);
         }
         clock_display_all(current);
@@ -167,22 +169,24 @@ static void clock_display_clock(clock_state_t *state, watch_date_time_t current)
 
 static void clock_display_low_energy(watch_date_time_t date_time) {
     if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
-        clock_indicate_pm(date_time);
+        clock_indicate_pm_am(date_time);
         date_time = clock_24h_to_12h(date_time);
     }
     char buf[8 + 1];
-
+    
     snprintf(
         buf,
         sizeof(buf),
-        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d  " : "%2d%2d%02d  ",
-        date_time.unit.day,
+        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d" : "%2d%02d%02d",
         date_time.unit.hour,
-        date_time.unit.minute
+        date_time.unit.minute,
+        date_time.unit.second
     );
 
-    watch_display_text(WATCH_POSITION_TOP, buf);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf + 2);
+    watch_display_text(WATCH_POSITION_TOP, watch_utility_get_weekday(date_time));
+    watch_display_text(WATCH_POSITION_HOURS, buf);
+    watch_display_text(WATCH_POSITION_MINUTES, buf + 2);
+    watch_display_text(WATCH_POSITION_SECONDS, buf + 4);
 }
 
 static void clock_start_tick_tock_animation(void) {

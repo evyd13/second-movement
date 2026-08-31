@@ -30,25 +30,25 @@
 #include <math.h>
 
 uint8_t IndicatorSegments[10] = {
-    SLCD_SEGID(1, 1), // WATCH_INDICATOR_SIGNAL
-    SLCD_SEGID(2, 1), // WATCH_INDICATOR_BELL
-    SLCD_SEGID(3, 5), // WATCH_INDICATOR_PM
-    SLCD_SEGID(3, 2), // WATCH_INDICATOR_AM
+    SLCD_SEGID(0, 0), // WATCH_INDICATOR_SIGNAL
+    SLCD_SEGID(1, 0), // WATCH_INDICATOR_BELL
+    SLCD_SEGID(2, 4), // WATCH_INDICATOR_PM
+    SLCD_SEGID(2, 1), // WATCH_INDICATOR_AM
 
-    SLCD_SEGID(3, 1), // WATCH_INDICATOR_K
-    SLCD_SEGID(3, 31), // WATCH_INDICATOR_DIVIDE
-    SLCD_SEGID(3, 11), // WATCH_INDICATOR_TIMES
-    SLCD_SEGID(3, 14), // WATCH_INDICATOR_MINUS
-    SLCD_SEGID(3, 17), // WATCH_INDICATOR_PLUS
+    SLCD_SEGID(2, 0), // WATCH_INDICATOR_K
+    SLCD_SEGID(2, 30), // WATCH_INDICATOR_DIVIDE
+    SLCD_SEGID(2, 10), // WATCH_INDICATOR_TIMES
+    SLCD_SEGID(2, 13), // WATCH_INDICATOR_MINUS
+    SLCD_SEGID(2, 16), // WATCH_INDICATOR_PLUS
 
-    SLCD_SEGID(2, 9), // WATCH_INDICATOR_COLON
+    SLCD_SEGID(1, 8), // WATCH_INDICATOR_COLON
 };
 
 void watch_display_character(uint8_t character, uint8_t position) {
-    if (character == '.') {
-        // TODOEEF: position -1 and apply decimal
-        character = '_'; // we can use the bottom segment; make dot an underscore
-    }
+    // if (character == '.') {
+    //     // TODOEEF: position -1 and apply decimal
+    //     character = '_'; // we can use the bottom segment; make dot an underscore
+    // }
     // TODOEEF: filter characters for pos 1,2 and the other
 
     digit_mapping_t segmap;
@@ -101,6 +101,7 @@ void watch_display_character_lp_seconds(uint8_t character, uint8_t position) {
 
         if (segdata & 1) {
             watch_set_pixel(com, seg);
+            
         }
         else {
             watch_clear_pixel(com, seg);
@@ -131,21 +132,21 @@ void watch_display_text(watch_position_t location, const char *string) {
             {
                 int i = 0;
                 while (string[i] != 0) {
-                    watch_display_character(string[i], 4 + i);
+                    watch_display_character(string[i], 2 + i);
                     i++;
                 }
         }
             break;
         case WATCH_POSITION_HOURS:
-            watch_display_character(string[0], 4);
+            watch_display_character(string[0], 2);
             if (string[1]) {
-                watch_display_character(string[1], 5);
+                watch_display_character(string[1], 3);
             }
             break;
         case WATCH_POSITION_MINUTES:
-            watch_display_character(string[0], 6);
+            watch_display_character(string[0], 5);
             if (string[1]) {
-                watch_display_character(string[1], 7);
+                watch_display_character(string[1], 6);
             }
             break;
         case WATCH_POSITION_SECONDS:
@@ -201,11 +202,11 @@ void watch_display_float_with_best_effort(float value, const char *units) {
 }
 
 void watch_set_colon(void) {
-    watch_set_pixel(2, 9);
+    watch_set_pixel(1, 8);
 }
 
 void watch_clear_colon(void) {
-    watch_clear_pixel(2, 9);
+    watch_clear_pixel(1, 8);
 }
 
 void watch_set_indicator(watch_indicator_t indicator) {
