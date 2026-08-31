@@ -44,6 +44,30 @@ uint8_t IndicatorSegments[10] = {
     SLCD_SEGID(1, 8), // WATCH_INDICATOR_COLON
 };
 
+uint8_t watch_get_weekday_character(uint8_t character, uint8_t position) {
+    if (position > 1) return character;
+    if (position == 0) {
+        if (character == 'b') return 'B';
+        if (character == 'd') return 'D';
+        if (character == 'i') return 'I';
+        if (character == 'm') return 'M';
+        if (character == 'r') return 'R';
+        if (character == 't') return 'T';
+        if (character == 'v') return 'V';
+        if (character == 'w') return 'W';
+    } else {
+        if (character == 'B') return 'b';
+        if (character == 'D') return 'd';
+        if (character == 'I') return 'i';
+        if (character == 'M') return 'm';
+        if (character == 'R') return 'r';
+        if (character == 'T') return 't';
+        if (character == 'V') return 'v';
+        if (character == 'W') return 'w';
+    }
+    return character;
+}
+
 void watch_display_character(uint8_t character, uint8_t position) {
     // if (character == '.') {
     //     // TODOEEF: position -1 and apply decimal
@@ -51,63 +75,54 @@ void watch_display_character(uint8_t character, uint8_t position) {
     // }
     // TODOEEF: filter characters for pos 1,2 and the other
 
-    digit_mapping_t segmap;
-    uint8_t segdata;
+    if (position < 2) {
+            weekday_digit_mapping_t segmap;
+            uint16_t segdata;
+            segmap = Weekday_Digits_LCD_Mapping[position];
+            segdata = weekday_character_set[watch_get_weekday_character(character, position) - 0x20];
 
-    segmap = Classic_LCD_Display_Mapping[position];
-    segdata = Classic_LCD_Character_Set[character - 0x20];
+            for (int i = 0; i < 16; i++) {
+                if (segmap.segment[i].value == segment_does_not_exist) {
+                    // Segment does not exist; skip it.
+                    segdata = segdata >> 1;
+                    continue;
+                }
+                uint8_t com = segmap.segment[i].address.com;
+                uint8_t seg = segmap.segment[i].address.seg;
 
-    for (int i = 0; i < 16; i++) {
-        if (segmap.segment[i].value == segment_does_not_exist) {
-            // Segment does not exist; skip it.
-            segdata = segdata >> 1;
-            continue;
-        }
-        uint8_t com = segmap.segment[i].address.com;
-        uint8_t seg = segmap.segment[i].address.seg;
+                if (segdata & 1) {
+                    watch_set_pixel(com, seg);
+                }
+                else {
+                    watch_clear_pixel(com, seg);
+                }
 
-        if (segdata & 1) {
-            watch_set_pixel(com, seg);
-        }
-        else {
-            watch_clear_pixel(com, seg);
-        }
+                segdata = segdata >> 1;
+            }
+    } else {
+            calculator_digit_mapping_t segmap;
+            uint8_t segdata;
+            segmap = Calculator_Digits_LCD_Mapping[position-2];
+            segdata = calculator_character_set[character - 0x20];
 
-        segdata = segdata >> 1;
-    }
-    // TODOEEF: SPECIAL CASE FOR T IN POS 1    
-    // if (character == 'T' && position == 1) watch_set_pixel(1, 12); // add descender
-}
+            for (int i = 0; i < 8; i++) {
+                if (segmap.segment[i].value == segment_does_not_exist) {
+                    // Segment does not exist; skip it.
+                    segdata = segdata >> 1;
+                    continue;
+                }
+                uint8_t com = segmap.segment[i].address.com;
+                uint8_t seg = segmap.segment[i].address.seg;
 
-void watch_display_character_lp_seconds(uint8_t character, uint8_t position) {
-    // Will only work for digits and for positions  8 and 9 - but less code & checks to reduce power consumption
+                if (segdata & 1) {
+                    watch_set_pixel(com, seg);
+                }
+                else {
+                    watch_clear_pixel(com, seg);
+                }
 
-    digit_mapping_t segmap;
-    uint8_t segdata;
-
-    /// TODO: See optimization note above.
-
-    segmap = Classic_LCD_Display_Mapping[position];
-    segdata = Classic_LCD_Character_Set[character - 0x20];
-
-    for (int i = 0; i < 16; i++) {
-        if (segmap.segment[i].value == segment_does_not_exist) {
-            // Segment does not exist; skip it.
-            segdata = segdata >> 1;
-            continue;
-        }
-        uint8_t com = segmap.segment[i].address.com;
-        uint8_t seg = segmap.segment[i].address.seg;
-
-        if (segdata & 1) {
-            watch_set_pixel(com, seg);
-            
-        }
-        else {
-            watch_clear_pixel(com, seg);
-        }
-
-        segdata = segdata >> 1;
+                segdata = segdata >> 1;
+            }
     }
 }
 

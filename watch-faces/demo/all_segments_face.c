@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "all_segments_face.h"
+#include "watch_common_display.h"
 #include "watch.h"
 
 void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -34,18 +35,129 @@ void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
 void all_segments_face_activate(void *context) {
     (void) context;
-    uint8_t num_com = 3;
-    uint8_t num_seg = 31 - num_com;
-
-
-    for (int com = 0; com < num_com; com++) {
-        for (int seg = 0; seg < num_seg; seg++) {
-            watch_set_pixel(com, seg);
+    watch_display_text(WATCH_POSITION_TOP, "@@");
+    watch_display_text(WATCH_POSITION_BOTTOM, "@@@@@@@@");
+    watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+    watch_set_indicator(WATCH_INDICATOR_BELL);
+    watch_set_indicator(WATCH_INDICATOR_PM);
+    watch_set_indicator(WATCH_INDICATOR_AM);
+    watch_set_indicator(WATCH_INDICATOR_K);
+    watch_set_indicator(WATCH_INDICATOR_DIVIDE);
+    watch_set_indicator(WATCH_INDICATOR_TIMES);
+    watch_set_indicator(WATCH_INDICATOR_PLUS);
+    watch_set_indicator(WATCH_INDICATOR_MINUS);
+    watch_display_text(WATCH_POSITION_BOTTOM, "@@@@@@@@");
+    
+    char all_segments_face_test_characters[] = {
+        ' ',
+        '!',
+        '"',
+        '#',
+        '$',
+        '%',
+        '&',
+        '\'',
+        '(',
+        ')',
+        '*',
+        '+',
+        ',',
+        '-',
+        '.',
+        '/',
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+        '8',
+        '9',
+        ':',
+        ';',
+        '<',
+        '=',
+        '>',
+        '?',
+        '@',
+        'A',
+        'B',
+        'C',
+        'D',
+        'E',
+        'F',
+        'G',
+        'H',
+        'I',
+        'J',
+        'K',
+        'L',
+        'M',
+        'N',
+        'O',
+        'P',
+        'Q',
+        'R',
+        'S',
+        'T',
+        'U',
+        'V',
+        'W',
+        'X',
+        'Y',
+        'Z',
+        '[',
+        'b',
+        ']',
+        '^',
+        '_',
+        '`',
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+        'f',
+        'g',
+        'h',
+        'i',
+        'j',
+        'k',
+        'l',
+        'm',
+        'n',
+        'o',
+        'p',
+        'q',
+        'r',
+        's',
+        't',
+        'u',
+        'v',
+        'w',
+        'x',
+        'y',
+        'z',
+        '{',
+        '|',
+        '}',
+        '~',
+        '@',
+    };
+    delay_ms(2000);
+    for (uint8_t i = 0; i< sizeof(all_segments_face_test_characters) / sizeof(all_segments_face_test_characters[0]); i++) {
+        for (uint8_t x = 0; x< 10; x++) {
+            watch_display_character(all_segments_face_test_characters[i], x);
         }
+        delay_ms(500);
     }
 }
 
 bool all_segments_face_loop(movement_event_t event, void *context) {
+    
+
     (void) context;
 
     movement_default_loop_handler(event);

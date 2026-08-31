@@ -29,11 +29,11 @@
 
 const watch_face_t watch_faces[] = {
     clock_face,
-    calculator_face,
-    alarm_face,
-    world_clock_face,
-    stopwatch_face,
     all_segments_face,
+    // calculator_face,
+    // alarm_face,
+    // world_clock_face,
+    // stopwatch_face,
 
     voltage_face,
     settings_face,
