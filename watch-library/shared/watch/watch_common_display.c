@@ -69,12 +69,6 @@ uint8_t watch_get_weekday_character(uint8_t character, uint8_t position) {
 }
 
 void watch_display_character(uint8_t character, uint8_t position) {
-    // if (character == '.') {
-    //     // TODOEEF: position -1 and apply decimal
-    //     character = '_'; // we can use the bottom segment; make dot an underscore
-    // }
-    // TODOEEF: filter characters for pos 1,2 and the other
-
     if (position < 2) {
             weekday_digit_mapping_t segmap;
             uint16_t segdata;
@@ -117,12 +111,38 @@ void watch_display_character(uint8_t character, uint8_t position) {
                 if (segdata & 1) {
                     watch_set_pixel(com, seg);
                 }
-                else {
+                else{
                     watch_clear_pixel(com, seg);
                 }
 
                 segdata = segdata >> 1;
             }
+    }
+}
+
+void watch_display_decimal(uint8_t position) {
+    uint8_t character = '.';
+    if (position >= 2) {
+        calculator_digit_mapping_t segmap;
+        uint8_t segdata;
+        segmap = Calculator_Digits_LCD_Mapping[position-2];
+        segdata = calculator_character_set[character - 0x20];
+
+        for (int i = 0; i < 8; i++) {
+            if (segmap.segment[i].value == segment_does_not_exist) {
+                // Segment does not exist; skip it.
+                segdata = segdata >> 1;
+                continue;
+            }
+            uint8_t com = segmap.segment[i].address.com;
+            uint8_t seg = segmap.segment[i].address.seg;
+
+            if (segdata & 1) {
+                watch_set_pixel(com, seg);
+            }
+
+            segdata = segdata >> 1;
+        }
     }
 }
 
@@ -146,8 +166,14 @@ void watch_display_text(watch_position_t location, const char *string) {
         case WATCH_POSITION_BOTTOM:
             {
                 int i = 0;
+                int number_of_decimals = 0;
                 while (string[i] != 0) {
-                    watch_display_character(string[i], 2 + i);
+                    if (string[i] == '.') {
+                        watch_display_decimal(2 + i - number_of_decimals - 1);
+                        number_of_decimals++;
+                    } else {
+                        watch_display_character(string[i], 2 + i - number_of_decimals);
+                    }
                     i++;
                 }
         }
@@ -180,8 +206,8 @@ void watch_display_text(watch_position_t location, const char *string) {
 }
 
 void watch_display_float_with_best_effort(float value, const char *units) {
-    char buf[8];
-    char buf_fallback[8];
+    char buf[10];
+    char buf_fallback[10];
     const char *blank_units = "  ";
 
     if (value < -99.9) {

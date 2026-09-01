@@ -31,7 +31,7 @@ static void _voltage_face_update_display(void) {
     float voltage = (float)watch_get_vcc_voltage() / 1000.0;
 
     watch_display_text(WATCH_POSITION_TOP, "BA");
-    watch_display_float_with_best_effort(voltage, " V");
+    watch_display_float_with_best_effort(voltage, " volt");
 }
 
 void voltage_face_setup(uint8_t watch_face_index, void ** context_ptr) {

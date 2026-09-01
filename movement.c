@@ -128,13 +128,13 @@ int8_t alarm_tune[] = {
 int8_t _movement_dst_offset_cache[NUM_ZONE_NAMES] = {0};
 #define TIMEZONE_DOES_NOT_OBSERVE (-127)
 
-void cb_keypad_btn_interrupt(void);
+void cb_keypad_interrupt(void);
 void cb_mode_btn_interrupt(void);
 void cb_mode_btn_extwake(void);
 void cb_adjust_btn_interrupt(void);
 void cb_minute_alarm_fired(void);
 void cb_tick(void);
-void cb_keypad_btn_timeout_interrupt(void);
+void cb_keypad_timeout_interrupt(void);
 void cb_mode_btn_timeout_interrupt(void);
 void cb_adjust_btn_timeout_interrupt(void);
 void cb_led_timeout_interrupt(void);
@@ -488,7 +488,9 @@ bool movement_default_loop_handler(movement_event_t event) {
             break;
         case EVENT_KEYPAD_BUTTON_DOWN:
             // TODOEEF: button, is it the times button? yes? lights on!
-            // movement_illuminate_led();
+        // TODOEEF: if keypad, scan for key. if state.keypad_key_pressed true, skip.
+            // led to test!
+            movement_illuminate_led();
             break;
         case EVENT_KEYPAD_BUTTON_UP:
         case EVENT_KEYPAD_LONG_UP:
@@ -987,7 +989,7 @@ void app_init(void) {
     movement_volatile_state.keypad_button.is_down = false;
     movement_volatile_state.keypad_button.down_timestamp = 0;
     movement_volatile_state.keypad_button.timeout_index = KEYPAD_BUTTON_TIMEOUT;
-    movement_volatile_state.keypad_button.cb_longpress = cb_keypad_btn_timeout_interrupt;
+    movement_volatile_state.keypad_button.cb_longpress = cb_keypad_timeout_interrupt;
 
     movement_volatile_state.mode_button.down_event = EVENT_MODE_BUTTON_DOWN;
     movement_volatile_state.mode_button.is_down = false;
@@ -1068,6 +1070,7 @@ void app_init(void) {
     movement_state.signal_volume = MOVEMENT_DEFAULT_SIGNAL_VOLUME;
     movement_state.alarm_volume = MOVEMENT_DEFAULT_ALARM_VOLUME;
     movement_state.light_on = false;
+    movement_state.keypad_key_pressed = KEYPAD_KEY_NONE;
     movement_state.next_available_backup_register = 2;
     _movement_reset_inactivity_countdown();
 
@@ -1114,8 +1117,11 @@ void app_setup(void) {
         watch_disable_extwake_interrupt(HAL_GPIO_BTN_MODE_pin());
 
         watch_enable_external_interrupts();
+        watch_register_interrupt_callback(HAL_GPIO_KPD_R0_pin(), cb_keypad_interrupt, INTERRUPT_TRIGGER_BOTH);
+        watch_register_interrupt_callback(HAL_GPIO_KPD_R1_pin(), cb_keypad_interrupt, INTERRUPT_TRIGGER_BOTH);
+        watch_register_interrupt_callback(HAL_GPIO_KPD_R2_pin(), cb_keypad_interrupt, INTERRUPT_TRIGGER_BOTH);
+        watch_register_interrupt_callback(HAL_GPIO_KPD_R3_pin(), cb_keypad_interrupt, INTERRUPT_TRIGGER_BOTH);
         watch_register_interrupt_callback(HAL_GPIO_BTN_MODE_pin(), cb_mode_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
-        watch_register_interrupt_callback(HAL_GPIO_BTN_KEYPAD_pin(), cb_keypad_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
         watch_register_interrupt_callback(HAL_GPIO_BTN_ADJUST_pin(), cb_adjust_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
 
 #ifdef I2C_SERCOM
@@ -1453,10 +1459,11 @@ static movement_event_type_t _process_button_event(bool pin_level, movement_butt
     return event_type;
 }
 
-void cb_keypad_btn_interrupt(void) {
+void cb_keypad_interrupt(void) {
     // TODOEEF: figure out what this function does and adapt it to keypad matrix
-    bool pin_level = HAL_GPIO_BTN_KEYPAD_read();
+    bool pin_level = HAL_GPIO_KPD_R0_read() || HAL_GPIO_KPD_R1_read() || HAL_GPIO_KPD_R2_read() || HAL_GPIO_KPD_R3_read();
 
+    movement_state.keypad_key_pressed = KEYPAD_KEY_K0;
     movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.keypad_button);
 }
 
@@ -1507,9 +1514,9 @@ static movement_event_type_t _process_button_longpress_timeout(bool pin_level, m
     }
 }
 
-void cb_keypad_btn_timeout_interrupt(void) {
+void cb_keypad_timeout_interrupt(void) {
     // TODOEEF: figure out what this function does and adapt it to keypad matrix
-    bool pin_level = HAL_GPIO_BTN_KEYPAD_read();
+    bool pin_level = HAL_GPIO_KPD_R0_read() || HAL_GPIO_KPD_R1_read() || HAL_GPIO_KPD_R2_read() || HAL_GPIO_KPD_R3_read();
     movement_button_t* button = &movement_volatile_state.keypad_button;
 
     movement_volatile_state.pending_events |= 1 << _process_button_longpress_timeout(pin_level, button);

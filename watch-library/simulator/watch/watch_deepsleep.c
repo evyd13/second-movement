@@ -80,9 +80,9 @@ void watch_enter_sleep_mode(void) {
     // disable tick interrupt
     watch_rtc_disable_all_periodic_callbacks();
 
-    // // disable all buttons but alarm
-    watch_register_interrupt_callback(HAL_GPIO_BTN_MODE_pin(), NULL, INTERRUPT_TRIGGER_NONE);
-    watch_register_interrupt_callback(HAL_GPIO_BTN_KEYPAD_pin(), NULL, INTERRUPT_TRIGGER_NONE);
+    // // disable all buttons but mode
+    watch_register_interrupt_callback(HAL_GPIO_BTN_ADJUST_pin(), NULL, INTERRUPT_TRIGGER_NONE);
+    // TODOEEF: call watch_keypad function to disable keypad 
 
     sleep(4);
 

@@ -46,7 +46,13 @@ void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, e
     bool filten = false;
 
     // check if this is a button pin
-    if (pin == HAL_GPIO_BTN_KEYPAD_pin() || pin == HAL_GPIO_BTN_MODE_pin() || pin == HAL_GPIO_BTN_ADJUST_pin()) {
+    if (pin == HAL_GPIO_BTN_MODE_pin() || \
+        pin == HAL_GPIO_BTN_ADJUST_pin() || \
+        pin == HAL_GPIO_KPD_R0_pin() || \
+        pin == HAL_GPIO_KPD_R1_pin() || \
+        pin == HAL_GPIO_KPD_R2_pin() || \
+        pin == HAL_GPIO_KPD_R3_pin()
+    ) {
         // if so, enable the pull-down resistor
         watch_enable_pull_down(pin);
         filten = true;

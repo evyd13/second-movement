@@ -89,7 +89,7 @@ static const uint16_t weekday_character_set[] =
     0b0000000001000011, // >
     0b0000000001010011, // ?
     0b1111111111111111, // @ (all segments on)
-    0b0000000001011111, // A
+    0b0000000001110111, // A
     0b0000010101111111, // B (special for weekday)
     0b0000000000111001, // C
     0b0000010100111111, // D (special for weekday)
@@ -121,7 +121,7 @@ static const uint16_t weekday_character_set[] =
     0b0000000000100011, // ^
     0b0000000000001000, // _
     0b0000000000000010, // `
-    0b0000000001011111, // a
+    0b0000000001110111, // a
     0b0000000001111100, // b (special for weekday)
     0b0000000000111001, // c
     0b0000000001011110, // d (special for weekday)

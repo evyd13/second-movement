@@ -158,6 +158,26 @@ typedef enum {
     BUZZER_PRIORITY_ALARM,      // Buzzer priority for hourly chime (highest priority).
 } movement_buzzer_priority_t;
 
+typedef enum {
+    KEYPAD_KEY_NONE = 0,
+    KEYPAD_KEY_K0,
+    KEYPAD_KEY_K1,
+    KEYPAD_KEY_K2,
+    KEYPAD_KEY_K3,
+    KEYPAD_KEY_K4,
+    KEYPAD_KEY_K5,
+    KEYPAD_KEY_K6,
+    KEYPAD_KEY_K7,
+    KEYPAD_KEY_K8,
+    KEYPAD_KEY_K9,
+    KEYPAD_KEY_DECIMAL,
+    KEYPAD_KEY_DIVIDE,
+    KEYPAD_KEY_TIMES,
+    KEYPAD_KEY_MINUS,
+    KEYPAD_KEY_PLUS,
+    KEYPAD_KEY_EQUALS,
+} movement_keypad_key_t;
+
 typedef struct {
     uint8_t event_type;
     uint8_t subsecond;
@@ -276,6 +296,9 @@ typedef struct {
 
     // LED stuff
     bool light_on;
+
+    //keypad
+    movement_keypad_key_t keypad_key_pressed;
 
     // background task handling
     bool has_scheduled_background_task;
