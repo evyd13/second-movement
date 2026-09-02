@@ -29,6 +29,43 @@
 #include "watch.h"
 #include "eic.h"
 
+typedef enum {
+    KEYPAD_KEY_NONE = 0,
+    KEYPAD_KEY_K0,
+    KEYPAD_KEY_K1,
+    KEYPAD_KEY_K2,
+    KEYPAD_KEY_K3,
+    KEYPAD_KEY_K4,
+    KEYPAD_KEY_K5,
+    KEYPAD_KEY_K6,
+    KEYPAD_KEY_K7,
+    KEYPAD_KEY_K8,
+    KEYPAD_KEY_K9,
+    KEYPAD_KEY_DECIMAL,
+    KEYPAD_KEY_DIVIDE,
+    KEYPAD_KEY_TIMES,
+    KEYPAD_KEY_MINUS,
+    KEYPAD_KEY_PLUS,
+    KEYPAD_KEY_EQUALS,
+} movement_keypad_key_t;
+
+typedef enum {
+    KEYPAD_ROW_NONE = 0,
+    KEYPAD_ROW_0,
+    KEYPAD_ROW_1,
+    KEYPAD_ROW_2,
+    KEYPAD_ROW_3,
+} movement_keypad_row_t;
+
+typedef enum {
+    KEYPAD_COL_NONE = 0,
+    KEYPAD_COL_0,
+    KEYPAD_COL_1,
+    KEYPAD_COL_2,
+    KEYPAD_COL_3,
+} movement_keypad_col_t;
+
+
 /** @addtogroup buttons Buttons & External Interrupts
   * @brief This section covers functions related to the three buttons: Light, Mode and Alarm, as well as
   *        external interrupts from devices on the nine-pin connector.

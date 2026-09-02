@@ -35,8 +35,16 @@ static bool external_interrupt_enabled = false;
 static bool button_callbacks_installed = false;
 static watch_cb_t external_interrupt_mode_callback = NULL;
 static eic_interrupt_trigger_t external_interrupt_mode_trigger = INTERRUPT_TRIGGER_NONE;
-static watch_cb_t external_interrupt_keypad_callback = NULL;
-static eic_interrupt_trigger_t external_interrupt_keypad_trigger = INTERRUPT_TRIGGER_NONE;
+
+static watch_cb_t external_interrupt_keypad_r0_callback = NULL;
+static eic_interrupt_trigger_t external_interrupt_keypad_r0_trigger = INTERRUPT_TRIGGER_NONE;
+static watch_cb_t external_interrupt_keypad_r1_callback = NULL;
+static eic_interrupt_trigger_t external_interrupt_keypad_r1_trigger = INTERRUPT_TRIGGER_NONE;
+static watch_cb_t external_interrupt_keypad_r2_callback = NULL;
+static eic_interrupt_trigger_t external_interrupt_keypad_r2_trigger = INTERRUPT_TRIGGER_NONE;
+static watch_cb_t external_interrupt_keypad_r3_callback = NULL;
+static eic_interrupt_trigger_t external_interrupt_keypad_r3_trigger = INTERRUPT_TRIGGER_NONE;
+
 static watch_cb_t external_interrupt_alarm_callback = NULL;
 static eic_interrupt_trigger_t external_interrupt_alarm_trigger = INTERRUPT_TRIGGER_NONE;
 
@@ -79,6 +87,12 @@ static const uint8_t BTN_IDS[] = {
     BTN_ID_DE,
     BTN_ID_EQ,
 };
+
+#define KEYPAD_C0 1
+#define KEYPAD_C1 2
+#define KEYPAD_C2 3
+#define KEYPAD_C3 4
+
 static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_interrupt_trigger_t trigger);
 
 static EM_BOOL watch_invoke_key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *userData) {
@@ -190,7 +204,7 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_inte
     watch_cb_t callback;
     eic_interrupt_trigger_t trigger;
     const bool level = (event & INTERRUPT_TRIGGER_RISING) != 0;
-
+    uint8_t active_col;
     switch (button_id) {
         // TODOEEF: write code that simulates keypresses on the keypad (row high, col low etc.)
         case BTN_ID_MODE:
@@ -208,32 +222,64 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_inte
         case BTN_ID_K9:
         case BTN_ID_DI:
             HAL_GPIO_KPD_R0_write(level);
-            callback = external_interrupt_keypad_callback;
-            trigger = external_interrupt_keypad_trigger;
+            callback = external_interrupt_keypad_r0_callback;
+            trigger = external_interrupt_keypad_r0_trigger;
             break;
         case BTN_ID_K4:
         case BTN_ID_K5:
         case BTN_ID_K6:
         case BTN_ID_TI:
             HAL_GPIO_KPD_R1_write(level);
-            callback = external_interrupt_keypad_callback;
-            trigger = external_interrupt_keypad_trigger;
+            callback = external_interrupt_keypad_r1_callback;
+            trigger = external_interrupt_keypad_r1_trigger;
             break;
         case BTN_ID_K1:
         case BTN_ID_K2:
         case BTN_ID_K3:
         case BTN_ID_MI:
             HAL_GPIO_KPD_R2_write(level);
-            callback = external_interrupt_keypad_callback;
-            trigger = external_interrupt_keypad_trigger;
+            callback = external_interrupt_keypad_r2_callback;
+            trigger = external_interrupt_keypad_r2_trigger;
             break;
         case BTN_ID_K0:
         case BTN_ID_DE:
         case BTN_ID_EQ:
         case BTN_ID_PL:
             HAL_GPIO_KPD_R3_write(level);
-            callback = external_interrupt_keypad_callback;
-            trigger = external_interrupt_keypad_trigger;
+            callback = external_interrupt_keypad_r3_callback;
+            trigger = external_interrupt_keypad_r3_trigger;
+            break;
+        default:
+            return EM_FALSE;
+    }
+    switch (button_id) {
+        case BTN_ID_MODE:
+            break;
+        case BTN_ID_ADJUST:
+            break;
+        case BTN_ID_K7:
+        case BTN_ID_K4:
+        case BTN_ID_K1:
+        case BTN_ID_K0:
+            active_col = KEYPAD_COL_0;
+            break;
+        case BTN_ID_K8:
+        case BTN_ID_K5:
+        case BTN_ID_K2:
+        case BTN_ID_DE:
+            active_col = KEYPAD_COL_1;
+            break;
+        case BTN_ID_K9:
+        case BTN_ID_K6:
+        case BTN_ID_K3:
+        case BTN_ID_EQ:
+            active_col = KEYPAD_COL_2;
+            break;
+        case BTN_ID_DI:
+        case BTN_ID_TI:
+        case BTN_ID_MI:
+        case BTN_ID_PL:
+            active_col = KEYPAD_COL_3;
             break;
         default:
             return EM_FALSE;
@@ -251,12 +297,25 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_inte
 
     if (callback && (event & trigger) != 0) {
         callback();
+        switch (active_col) {
+            case KEYPAD_COL_0:
+                HAL_GPIO_KPD_C0_write(level);
+                break;
+            case KEYPAD_COL_1:
+                HAL_GPIO_KPD_C1_write(level);
+                break;
+            case KEYPAD_COL_2:
+                HAL_GPIO_KPD_C2_write(level);
+                break;
+            case KEYPAD_COL_3:
+                HAL_GPIO_KPD_C3_write(level);
+                break;
+        }
         resume_main_loop();
     }
 
     return EM_TRUE;
 }
-
 void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger_t trigger) {
     if (pin == HAL_GPIO_BTN_MODE_pin()) {
         external_interrupt_mode_callback = callback;
@@ -264,12 +323,17 @@ void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, e
     } else if (pin == HAL_GPIO_BTN_ADJUST_pin()) {
         external_interrupt_alarm_callback = callback;
         external_interrupt_alarm_trigger = trigger;
-    } else if (
-        pin == HAL_GPIO_KPD_R0_pin() || \
-        pin == HAL_GPIO_KPD_R1_pin() || \
-        pin == HAL_GPIO_KPD_R2_pin() || \
-        pin == HAL_GPIO_KPD_R3_pin()) {
-        external_interrupt_keypad_callback = callback;
-        external_interrupt_keypad_trigger = trigger;
+    } else if (pin == HAL_GPIO_KPD_R0_pin()) {
+        external_interrupt_keypad_r0_callback = callback;
+        external_interrupt_keypad_r0_trigger = trigger;
+    } else if (pin == HAL_GPIO_KPD_R1_pin()) {
+        external_interrupt_keypad_r1_callback = callback;
+        external_interrupt_keypad_r1_trigger = trigger;
+    } else if (pin == HAL_GPIO_KPD_R2_pin()) {
+        external_interrupt_keypad_r2_callback = callback;
+        external_interrupt_keypad_r2_trigger = trigger;
+    } else if (pin == HAL_GPIO_KPD_R3_pin()) {
+        external_interrupt_keypad_r3_callback = callback;
+        external_interrupt_keypad_r3_trigger = trigger;
     }
 }

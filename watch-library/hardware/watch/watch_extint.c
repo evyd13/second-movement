@@ -53,8 +53,8 @@ void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, e
         pin == HAL_GPIO_KPD_R2_pin() || \
         pin == HAL_GPIO_KPD_R3_pin()
     ) {
-        // if so, enable the pull-down resistor
-        watch_enable_pull_down(pin);
+        // if so, enable the pull-up resistor
+        watch_enable_pull_up(pin);
         filten = true;
     }
 

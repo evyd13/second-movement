@@ -31,6 +31,7 @@ const watch_face_t watch_faces[] = {
     clock_face,
     all_segments_face,
     voltage_face,
+    temperature_display_face,
     // calculator_face,
     // alarm_face,
     // world_clock_face,

@@ -75,7 +75,7 @@ static void watch_invoke_blink_callback(void *userData) {
 
 void watch_start_character_blink(char character, uint32_t duration) {
     if (blink_interval_id != -1) return;
-    watch_display_character(character, 7);
+    watch_display_character(character, 9);
 
     blink_state = true;
     blink_character = character;
@@ -95,9 +95,11 @@ void watch_stop_blink(void) {
 static void watch_invoke_tick_callback(void *userData) {
     tick_state = !tick_state;
     if (tick_state) {
-        watch_clear_pixel(1, 21);
+        watch_clear_pixel(0, 19);
+        watch_set_pixel(0, 20);
     } else {
-        watch_set_pixel(1, 21);
+        watch_clear_pixel(0, 20);
+        watch_set_pixel(0, 19);
     }
 }
 

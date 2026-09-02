@@ -128,7 +128,35 @@ void watch_start_character_blink(char character, uint32_t duration) {
 }
 
 void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32_t duration) {
-    //not possible on classic lcd?
+    uint8_t mask = 0;
+    switch (indicator) {
+        case WATCH_INDICATOR_SIGNAL:
+            mask = 0b001;
+            break;
+        case WATCH_INDICATOR_BELL:
+            mask = 0b010;
+            break;
+        case WATCH_INDICATOR_K:
+            mask = 0b100;
+            break;
+        default:
+            return;
+    }
+    watch_set_indicator(indicator);
+
+    if (duration <= _slcd_fc_min_ms_bypass) {
+        slcd_configure_frame_counter(0, (duration / (1000 / _slcd_framerate)) - 1, false);
+    } else {
+        slcd_configure_frame_counter(0, ((duration / (1000 / _slcd_framerate)) / 8 - 1), true);
+    }
+    slcd_set_frame_counter_enabled(0, true);
+
+
+    slcd_disable();
+    slcd_set_blink_enabled(false);
+    slcd_configure_blink(false, mask, 0, 0);
+    slcd_set_blink_enabled(true);
+    slcd_enable();
 }
 
 void watch_stop_blink(void) {
@@ -138,8 +166,7 @@ void watch_stop_blink(void) {
 
 void watch_start_sleep_animation(uint32_t duration) {
     // on classic LCD we do the "tick/tock" animation
-    watch_display_character(' ', 9);
-    watch_display_character(' ', 10);
+    watch_display_character(' ', 8);
 
     slcd_disable();
     slcd_set_frame_counter_enabled(1, false);
@@ -164,5 +191,5 @@ bool watch_sleep_animation_is_running(void) {
 
 void watch_stop_sleep_animation(void) {
     slcd_set_circular_shift_animation_enabled(false);
-    watch_display_character(' ', 9);
+    watch_display_character(' ', 8);
 }

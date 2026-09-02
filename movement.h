@@ -158,26 +158,6 @@ typedef enum {
     BUZZER_PRIORITY_ALARM,      // Buzzer priority for hourly chime (highest priority).
 } movement_buzzer_priority_t;
 
-typedef enum {
-    KEYPAD_KEY_NONE = 0,
-    KEYPAD_KEY_K0,
-    KEYPAD_KEY_K1,
-    KEYPAD_KEY_K2,
-    KEYPAD_KEY_K3,
-    KEYPAD_KEY_K4,
-    KEYPAD_KEY_K5,
-    KEYPAD_KEY_K6,
-    KEYPAD_KEY_K7,
-    KEYPAD_KEY_K8,
-    KEYPAD_KEY_K9,
-    KEYPAD_KEY_DECIMAL,
-    KEYPAD_KEY_DIVIDE,
-    KEYPAD_KEY_TIMES,
-    KEYPAD_KEY_MINUS,
-    KEYPAD_KEY_PLUS,
-    KEYPAD_KEY_EQUALS,
-} movement_keypad_key_t;
-
 typedef struct {
     uint8_t event_type;
     uint8_t subsecond;
@@ -433,3 +413,10 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold);
 // If the board has multiple temperature sensors, it will use the most accurate one available.
 // If the board has no temperature sensors, it will return 0xFFFFFFFF.
 float movement_get_temperature(void);
+
+// Keypad functions
+uint8_t movement_get_key_pressed(void);
+void watch_keypad_register_interrupts(void);
+void watch_keypad_setup_column_pins_out(bool level);
+void watch_keypad_setup_column_pins_in(bool level);
+movement_keypad_key_t movement_scan_matrix(void);

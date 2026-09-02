@@ -5,8 +5,10 @@ This is firmware for the [Outatime Pro](https://github.com/evyd13/outatime-pro) 
 
 ## Todo:
 - ctrl+f for TODOEEF: and go from there?
-- add keypad functionality
+- simulator: add keyboard functionality
+- add hardware interrupts for keypad/adjust (max 5) or have only BTN_MODE do the wake up?
 - update watch faces to use screen properly/to have oem functionality
+- restore common watch faces from main branch (I removed a bunch to make it compile)
 - obtain usb pid from https://pid.codes/1209/
 
 Getting dependencies

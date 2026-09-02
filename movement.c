@@ -96,6 +96,9 @@ typedef struct {
     volatile uint8_t pending_sequence_priority;
     volatile bool schedule_next_comp;
     volatile bool has_pending_accelerometer;
+    volatile movement_keypad_row_t keypad_active_row;
+    volatile movement_keypad_col_t keypad_active_col;
+    volatile bool keypad_is_scanning;
 
     // button tracking for long press
     movement_button_t keypad_button;
@@ -128,7 +131,10 @@ int8_t alarm_tune[] = {
 int8_t _movement_dst_offset_cache[NUM_ZONE_NAMES] = {0};
 #define TIMEZONE_DOES_NOT_OBSERVE (-127)
 
-void cb_keypad_interrupt(void);
+void cb_keypad_interrupt_r0(void);
+void cb_keypad_interrupt_r1(void);
+void cb_keypad_interrupt_r2(void);
+void cb_keypad_interrupt_r3(void);
 void cb_mode_btn_interrupt(void);
 void cb_mode_btn_extwake(void);
 void cb_adjust_btn_interrupt(void);
@@ -364,6 +370,7 @@ static void _movement_handle_button_presses(uint32_t pending_events) {
     }
 
     if (any_down || any_up || any_long) {
+        movement_scan_matrix();
         _movement_reset_inactivity_countdown();
         movement_volatile_state.schedule_next_comp = true;
     }
@@ -481,16 +488,81 @@ void movement_force_led_off(void) {
     watch_set_led_off();
 }
 
+void watch_keypad_register_interrupts(void) {
+    watch_register_interrupt_callback(HAL_GPIO_KPD_R0_pin(), cb_keypad_interrupt_r0, INTERRUPT_TRIGGER_BOTH);
+    watch_register_interrupt_callback(HAL_GPIO_KPD_R1_pin(), cb_keypad_interrupt_r1, INTERRUPT_TRIGGER_BOTH);
+    watch_register_interrupt_callback(HAL_GPIO_KPD_R2_pin(), cb_keypad_interrupt_r2, INTERRUPT_TRIGGER_BOTH);
+    watch_register_interrupt_callback(HAL_GPIO_KPD_R3_pin(), cb_keypad_interrupt_r3, INTERRUPT_TRIGGER_BOTH);
+}
+
+void watch_keypad_setup_column_pins_out(bool level) {
+    HAL_GPIO_KPD_C0_out();
+    HAL_GPIO_KPD_C0_write(level);
+    HAL_GPIO_KPD_C1_out();
+    HAL_GPIO_KPD_C1_write(level);
+    HAL_GPIO_KPD_C2_out();
+    HAL_GPIO_KPD_C2_write(level);
+    HAL_GPIO_KPD_C3_out();
+    HAL_GPIO_KPD_C3_write(level);
+}
+
+void watch_keypad_setup_column_pins_in(bool level) {
+    HAL_GPIO_KPD_C0_in();
+    HAL_GPIO_KPD_C1_in();
+    HAL_GPIO_KPD_C2_in();
+    HAL_GPIO_KPD_C3_in();
+    if(level) {
+        HAL_GPIO_KPD_C0_pullup();
+        HAL_GPIO_KPD_C1_pullup();
+        HAL_GPIO_KPD_C2_pullup();
+        HAL_GPIO_KPD_C3_pullup();
+    } else {
+        HAL_GPIO_KPD_C0_pulldown();
+        HAL_GPIO_KPD_C1_pulldown();
+        HAL_GPIO_KPD_C2_pulldown();
+        HAL_GPIO_KPD_C3_pulldown();
+    }
+}
+
+movement_keypad_key_t movement_scan_matrix(void) {
+    movement_volatile_state.keypad_is_scanning = true;
+    movement_keypad_row_t active_row = movement_volatile_state.keypad_active_row;
+    movement_keypad_col_t active_col = KEYPAD_COL_NONE;
+    
+    movement_keypad_key_t matrix[4][4] = {
+        {KEYPAD_KEY_K7, KEYPAD_KEY_K8, KEYPAD_KEY_K9, KEYPAD_KEY_DIVIDE},
+        {KEYPAD_KEY_K4, KEYPAD_KEY_K5, KEYPAD_KEY_K6, KEYPAD_KEY_TIMES},
+        {KEYPAD_KEY_K1, KEYPAD_KEY_K2, KEYPAD_KEY_K3, KEYPAD_KEY_MINUS},
+        {KEYPAD_KEY_K0, KEYPAD_KEY_DECIMAL, KEYPAD_KEY_EQUALS, KEYPAD_KEY_PLUS}
+    };
+    
+    //row is known, scan !
+    if(HAL_GPIO_KPD_C0_read()) {
+        active_col = KEYPAD_COL_0;
+    } else if(HAL_GPIO_KPD_C1_read()) {
+        active_col = KEYPAD_COL_1;
+    } else if(HAL_GPIO_KPD_C2_read()) {
+        active_col = KEYPAD_COL_2;
+    } else if(HAL_GPIO_KPD_C3_read()) {
+        active_col = KEYPAD_COL_3;
+    } else {
+        active_col = KEYPAD_COL_NONE;
+    }
+
+    watch_keypad_setup_column_pins_out(0);
+    movement_volatile_state.keypad_is_scanning = false;
+    movement_state.keypad_key_pressed = (active_col == KEYPAD_COL_NONE) ? KEYPAD_KEY_NONE : matrix[active_row-1][active_col-1];
+}
+
 bool movement_default_loop_handler(movement_event_t event) {
     switch (event.event_type) {
         case EVENT_MODE_BUTTON_UP:
             movement_move_to_next_face();
             break;
-        case EVENT_KEYPAD_BUTTON_DOWN:
-            // TODOEEF: button, is it the times button? yes? lights on!
-        // TODOEEF: if keypad, scan for key. if state.keypad_key_pressed true, skip.
-            // led to test!
-            movement_illuminate_led();
+        case EVENT_KEYPAD_BUTTON_DOWN:                        
+            if (movement_get_key_pressed() == KEYPAD_KEY_TIMES) {
+                movement_illuminate_led();
+            }
             break;
         case EVENT_KEYPAD_BUTTON_UP:
         case EVENT_KEYPAD_LONG_UP:
@@ -1113,14 +1185,11 @@ void app_setup(void) {
     watch_enable_display();
 
     if (!movement_volatile_state.is_sleeping) {
-        // TODOEEF: change this to handle keypad
         watch_disable_extwake_interrupt(HAL_GPIO_BTN_MODE_pin());
 
         watch_enable_external_interrupts();
-        watch_register_interrupt_callback(HAL_GPIO_KPD_R0_pin(), cb_keypad_interrupt, INTERRUPT_TRIGGER_BOTH);
-        watch_register_interrupt_callback(HAL_GPIO_KPD_R1_pin(), cb_keypad_interrupt, INTERRUPT_TRIGGER_BOTH);
-        watch_register_interrupt_callback(HAL_GPIO_KPD_R2_pin(), cb_keypad_interrupt, INTERRUPT_TRIGGER_BOTH);
-        watch_register_interrupt_callback(HAL_GPIO_KPD_R3_pin(), cb_keypad_interrupt, INTERRUPT_TRIGGER_BOTH);
+        watch_keypad_register_interrupts();
+        watch_keypad_setup_column_pins_out(0);
         watch_register_interrupt_callback(HAL_GPIO_BTN_MODE_pin(), cb_mode_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
         watch_register_interrupt_callback(HAL_GPIO_BTN_ADJUST_pin(), cb_adjust_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
 
@@ -1418,7 +1487,6 @@ bool app_loop(void) {
 }
 
 static movement_event_type_t _process_button_event(bool pin_level, movement_button_t* button) {
-    // TODOEEF: should probably do something with keypad key handling here too
     movement_event_type_t event_type = EVENT_NONE;
 
     // This shouldn't happen normally
@@ -1459,11 +1527,32 @@ static movement_event_type_t _process_button_event(bool pin_level, movement_butt
     return event_type;
 }
 
-void cb_keypad_interrupt(void) {
-    // TODOEEF: figure out what this function does and adapt it to keypad matrix
-    bool pin_level = HAL_GPIO_KPD_R0_read() || HAL_GPIO_KPD_R1_read() || HAL_GPIO_KPD_R2_read() || HAL_GPIO_KPD_R3_read();
-
-    movement_state.keypad_key_pressed = KEYPAD_KEY_K0;
+void cb_keypad_interrupt_r0(void) {
+    if (movement_volatile_state.keypad_is_scanning) return;
+    watch_keypad_setup_column_pins_in(0);
+    bool pin_level = HAL_GPIO_KPD_R0_read();
+    movement_volatile_state.keypad_active_row = KEYPAD_ROW_0;
+    movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.keypad_button);
+}
+void cb_keypad_interrupt_r1(void) {
+    if (movement_volatile_state.keypad_is_scanning) return;
+    watch_keypad_setup_column_pins_in(0);
+    bool pin_level = HAL_GPIO_KPD_R1_read();
+    movement_volatile_state.keypad_active_row = KEYPAD_ROW_1;
+    movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.keypad_button);
+}
+void cb_keypad_interrupt_r2(void) {
+    if (movement_volatile_state.keypad_is_scanning) return;
+    watch_keypad_setup_column_pins_in(0);
+    bool pin_level = HAL_GPIO_KPD_R2_read();
+    movement_volatile_state.keypad_active_row = KEYPAD_ROW_2;
+    movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.keypad_button);
+}
+void cb_keypad_interrupt_r3(void) {
+    if (movement_volatile_state.keypad_is_scanning) return;
+    watch_keypad_setup_column_pins_in(0);
+    bool pin_level = HAL_GPIO_KPD_R3_read();
+    movement_volatile_state.keypad_active_row = KEYPAD_ROW_3;
     movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.keypad_button);
 }
 
@@ -1515,7 +1604,6 @@ static movement_event_type_t _process_button_longpress_timeout(bool pin_level, m
 }
 
 void cb_keypad_timeout_interrupt(void) {
-    // TODOEEF: figure out what this function does and adapt it to keypad matrix
     bool pin_level = HAL_GPIO_KPD_R0_read() || HAL_GPIO_KPD_R1_read() || HAL_GPIO_KPD_R2_read() || HAL_GPIO_KPD_R3_read();
     movement_button_t* button = &movement_volatile_state.keypad_button;
 
@@ -1579,4 +1667,8 @@ void cb_accelerometer_wake(void) {
     movement_volatile_state.pending_events |= 1 << EVENT_ACCELEROMETER_WAKE;
     // also: wake up!
     _movement_reset_inactivity_countdown();
+}
+
+uint8_t movement_get_key_pressed(void) {
+    return movement_state.keypad_key_pressed;
 }
