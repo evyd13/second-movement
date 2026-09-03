@@ -70,6 +70,7 @@ static void alarm_indicate(watch_indicator_t indicator, bool on) {
         watch_clear_indicator(indicator);
     }
 }
+
 static void alarm_indicate_time_signal(alarm_face_state_t *state) {
     alarm_indicate(WATCH_INDICATOR_BELL, movement_time_signal_enabled());
 }

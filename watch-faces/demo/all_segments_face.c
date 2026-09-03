@@ -30,11 +30,19 @@
 
 void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    (void) context_ptr;
+    if (*context_ptr == NULL) {
+        *context_ptr = malloc(sizeof(all_segments_face_state_t));
+        all_segments_face_state_t *state = (all_segments_face_state_t *)*context_ptr;
+        memset(*context_ptr, 0, sizeof(all_segments_face_state_t));
+    }
 }
 
-void all_segments_face_activate(void *context) {
-    (void) context;
+static inline void button_beep() {
+    // play a beep as confirmation for a button press (if applicable)
+    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
+}
+
+void all_segments_display_all(void *context) {
     watch_display_text(WATCH_POSITION_TOP, "@@");
     watch_display_text(WATCH_POSITION_BOTTOM, "@@@@@@@@");
     watch_set_indicator(WATCH_INDICATOR_SIGNAL);
@@ -46,18 +54,56 @@ void all_segments_face_activate(void *context) {
     watch_set_indicator(WATCH_INDICATOR_TIMES);
     watch_set_indicator(WATCH_INDICATOR_PLUS);
     watch_set_indicator(WATCH_INDICATOR_MINUS);
-    watch_display_text(WATCH_POSITION_BOTTOM, "@@@@@@@@");
+}
+
+void all_segments_display_name(void *context) {
+    watch_display_text(WATCH_POSITION_TOP, "  ");
+    watch_display_text(WATCH_POSITION_BOTTOM, "Outatime");
+    watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+    watch_clear_indicator(WATCH_INDICATOR_BELL);
+    watch_clear_indicator(WATCH_INDICATOR_PM);
+    watch_clear_indicator(WATCH_INDICATOR_AM);
+    watch_clear_indicator(WATCH_INDICATOR_K);
+    watch_clear_indicator(WATCH_INDICATOR_DIVIDE);
+    watch_clear_indicator(WATCH_INDICATOR_TIMES);
+    watch_clear_indicator(WATCH_INDICATOR_PLUS);
+    watch_clear_indicator(WATCH_INDICATOR_MINUS);
+}
+
+void all_segments_face_activate(void *context) {
+    all_segments_face_state_t *state = (all_segments_face_state_t *)context;
+    state->face_mode = ALL_SEGMENTS_FACE_MODE_ALL;
 }
 
 bool all_segments_face_loop(movement_event_t event, void *context) {
-    
+    all_segments_face_state_t *state = (all_segments_face_state_t *) context;
 
-    (void) context;
-
-    movement_default_loop_handler(event);
+    switch (event.event_type) {
+        case EVENT_TICK:
+        case EVENT_ACTIVATE:
+            if(state->face_mode == ALL_SEGMENTS_FACE_MODE_ALL) {
+                all_segments_display_all(state);
+            } else {
+                all_segments_display_name(state);
+            }
+            break;
+        case EVENT_MODE_BUTTON_UP:
+        case EVENT_MODE_LONG_UP:
+            if(state->face_mode == ALL_SEGMENTS_FACE_MODE_ALL) {
+                state->face_mode = ALL_SEGMENTS_FACE_MODE_NAME;
+                all_segments_display_name(state);
+                break;
+            } else {
+                state->face_mode = ALL_SEGMENTS_FACE_MODE_ALL;
+                all_segments_display_all(state);
+            }
+        default:
+            return movement_default_loop_handler(event);
+    }
 
     return true;
 }
+
 
 void all_segments_face_resign(void *context) {
     (void) context;
