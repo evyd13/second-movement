@@ -29,17 +29,18 @@
 
 const watch_face_t watch_faces[] = {
     clock_face,
-    all_segments_face,
+    calculator_face,
+    alarm_face, // required to enable alarm and time signal, simulating OEM functionality.
+    world_clock_face,
+    stopwatch_face,
+
     voltage_face,
     temperature_display_face,
-    // calculator_face,
-    // alarm_face,
-    // world_clock_face,
-    // stopwatch_face,
     settings_face,
     set_time_face,
-    finetune_face,
-    nanosec_face,
+    // finetune_face,
+    // nanosec_face,
+    all_segments_face,
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
@@ -50,10 +51,20 @@ const watch_face_t watch_faces[] = {
  * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
  * If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect.
  */
-#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 4)
+#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
 #define SIGNAL_TUNE_DEFAULT
+
+/* !--Set the key to enable backlight. This could interfere with watch face functionality.
+ * !--Value is the index of enum movement_keypad_key_t.
+ * !--Recommended are:
+ * !--KEYPAD_KEY_PLUS (15)
+ * !--KEYPAD_KEY_TIMES (13)
+ * 
+ * I wanted to have this here, but you'll have to set it over at watch_extint.h.
+ */
+// #define MOVEMENT_BACKLIGHT_KEY 15
 
 /* Determines the intensity of the led colors
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity

@@ -168,7 +168,7 @@ void watch_display_text(watch_position_t location, const char *string) {
                 int i = 0;
                 int number_of_decimals = 0;
                 while (string[i] != 0) {
-                    if (string[i] == '.') {
+                    if (string[i] == '.' && i != 0) {
                         watch_display_decimal(2 + i - number_of_decimals - 1);
                         number_of_decimals++;
                     } else {

@@ -559,8 +559,8 @@ bool movement_default_loop_handler(movement_event_t event) {
         case EVENT_MODE_BUTTON_UP:
             movement_move_to_next_face();
             break;
-        case EVENT_KEYPAD_BUTTON_DOWN:                        
-            if (movement_get_key_pressed() == KEYPAD_KEY_TIMES) {
+        case EVENT_KEYPAD_BUTTON_DOWN:
+            if (movement_get_key_pressed() == MOVEMENT_BACKLIGHT_KEY) {
                 movement_illuminate_led();
             }
             break;
@@ -570,7 +570,7 @@ bool movement_default_loop_handler(movement_event_t event) {
                 movement_force_led_off();
             }
             break;
-        case EVENT_MODE_LONG_PRESS:
+        case EVENT_ADJUST_LONG_PRESS:
             if (MOVEMENT_SECONDARY_FACE_INDEX && movement_state.current_face_idx == 0) {
                 movement_move_to_face(MOVEMENT_SECONDARY_FACE_INDEX);
             } else {
@@ -918,6 +918,14 @@ bool movement_alarm_enabled(void) {
 
 void movement_set_alarm_enabled(bool value) {
     movement_state.alarm_enabled = value;
+}
+
+bool movement_time_signal_enabled(void) {
+    return movement_state.time_signal_enabled;
+}
+
+void movement_set_time_signal_enabled(bool value) {
+    movement_state.time_signal_enabled = value;
 }
 
 bool movement_enable_tap_detection_if_available(bool enable_double_tap) {
@@ -1637,8 +1645,6 @@ void cb_sleep_timeout_interrupt(void) {
 }
 
 void cb_mode_btn_extwake(void) {
-    // TODOEEF: add these functions for keypad and adjust buttons too! each has its own interrupt pin :)
-    // wake up!
     movement_request_wake();
 }
 
@@ -1672,3 +1678,45 @@ void cb_accelerometer_wake(void) {
 uint8_t movement_get_key_pressed(void) {
     return movement_state.keypad_key_pressed;
 }
+
+bool movement_is_number_pressed(void) {
+    movement_keypad_key_t key = movement_get_key_pressed();
+    return (
+        key == KEYPAD_KEY_K0 || \
+        key == KEYPAD_KEY_K1 || \
+        key == KEYPAD_KEY_K2 || \
+        key == KEYPAD_KEY_K3 || \
+        key == KEYPAD_KEY_K4 || \
+        key == KEYPAD_KEY_K5 || \
+        key == KEYPAD_KEY_K6 || \
+        key == KEYPAD_KEY_K7 || \
+        key == KEYPAD_KEY_K8 || \
+        key == KEYPAD_KEY_K9
+    );
+}
+
+uint8_t movement_get_keypad_number_pressed(void) {
+    switch(movement_get_key_pressed()) {
+        case KEYPAD_KEY_K0:
+            return 0;
+        case KEYPAD_KEY_K1:
+            return 1;
+        case KEYPAD_KEY_K2:
+            return 2;
+        case KEYPAD_KEY_K3:
+            return 3;
+        case KEYPAD_KEY_K4:
+            return 4;
+        case KEYPAD_KEY_K5:
+            return 5;
+        case KEYPAD_KEY_K6:
+            return 6;
+        case KEYPAD_KEY_K7:
+            return 7;
+        case KEYPAD_KEY_K8:
+            return 8;
+        case KEYPAD_KEY_K9:
+            return 9;
+    }
+}
+

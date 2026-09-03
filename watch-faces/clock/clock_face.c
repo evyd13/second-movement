@@ -42,6 +42,19 @@
 #define CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD 2400
 #endif
 
+bool should_show_alternate_screen(clock_state_t *state) {
+    return state->show_alternate_screen;
+}
+void set_alternate_screen(clock_state_t *state, bool value) {
+    state->show_alternate_screen = value;
+}
+void set_should_redraw_screen(clock_state_t *state, bool value) {
+    state->redraw_screen = value;
+}
+bool should_redraw_screen(clock_state_t *state) {
+    return state->redraw_screen;
+}
+
 static void clock_indicate(watch_indicator_t indicator, bool on) {
     if (on) {
         watch_set_indicator(indicator);
@@ -55,11 +68,7 @@ static void clock_indicate_alarm() {
 }
 
 static void clock_indicate_time_signal(clock_state_t *state) {
-    clock_indicate(WATCH_INDICATOR_BELL, state->time_signal_enabled);
-}
-
-static void clock_indicate_24h() {
-    clock_indicate(WATCH_INDICATOR_AM, !!movement_clock_mode_24h());
+    clock_indicate(WATCH_INDICATOR_BELL, movement_time_signal_enabled());
 }
 
 static bool clock_is_pm(watch_date_time_t date_time) {
@@ -101,9 +110,25 @@ static void clock_check_battery_periodically(clock_state_t *state, watch_date_ti
     clock_indicate_low_available_power(state);
 }
 
-static void clock_toggle_time_signal(clock_state_t *state) {
-    state->time_signal_enabled = !state->time_signal_enabled;
-    clock_indicate_time_signal(state);
+
+static void date_display_all(watch_date_time_t date_time) {
+    char buf[6+1];
+
+    snprintf(
+        buf,
+        sizeof(buf),
+       "%02d%2d%2d",
+        date_time.unit.year+20,
+        date_time.unit.month,
+        date_time.unit.day
+    );
+
+    watch_display_text(WATCH_POSITION_TOP, watch_utility_get_weekday(date_time));
+    watch_display_text(WATCH_POSITION_HOURS, buf);
+    watch_display_text(WATCH_POSITION_MINUTES, buf+2);
+    watch_display_text(WATCH_POSITION_SECONDS, buf+4);
+    watch_clear_indicator(WATCH_INDICATOR_AM);
+    watch_clear_indicator(WATCH_INDICATOR_PM);
 }
 
 static void clock_display_all(watch_date_time_t date_time) {
@@ -158,12 +183,25 @@ static bool clock_display_some(watch_date_time_t current, watch_date_time_t prev
 }
 
 static void clock_display_clock(clock_state_t *state, watch_date_time_t current) {
-    if (!clock_display_some(current, state->date_time.previous)) {
+    if (should_redraw_screen(state) || !clock_display_some(current, state->date_time.previous)) {
         if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
             clock_indicate_pm_am(current);
             current = clock_24h_to_12h(current);
         }
+        
+        watch_set_colon();
+        watch_display_character(' ', 7);
         clock_display_all(current);
+        set_should_redraw_screen(state, false);
+    }
+}
+
+static void clock_display_date(clock_state_t *state, watch_date_time_t current) {
+    if (should_redraw_screen(state)) {
+        watch_clear_colon();
+        watch_display_character('-', 7);
+        date_display_all(current);
+        set_should_redraw_screen(state, false);
     }
 }
 
@@ -182,6 +220,7 @@ static void clock_display_low_energy(watch_date_time_t date_time) {
         date_time.unit.minute
     );
 
+    watch_set_colon();
     watch_display_text(WATCH_POSITION_TOP, watch_utility_get_weekday(date_time));
     watch_display_text(WATCH_POSITION_HOURS, buf);
     watch_display_text(WATCH_POSITION_MINUTES, buf + 2);
@@ -208,7 +247,7 @@ void clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(clock_state_t));
         clock_state_t *state = (clock_state_t *) *context_ptr;
-        state->time_signal_enabled = false;
+        movement_set_time_signal_enabled(false);
         state->watch_face_index = watch_face_index;
     }
 }
@@ -220,9 +259,6 @@ void clock_face_activate(void *context) {
 
     clock_indicate_time_signal(state);
     clock_indicate_alarm();
-    clock_indicate_24h();
-
-    watch_set_colon();
 
     // this ensures that none of the timestamp fields will match, so we can re-render them all.
     state->date_time.previous.reg = 0xFFFFFFFF;
@@ -240,22 +276,37 @@ bool clock_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
         case EVENT_ACTIVATE:
             current = movement_get_local_date_time();
-
-            clock_display_clock(state, current);
+            if (should_show_alternate_screen(state)) {
+                clock_display_date(state, current);
+            } else {
+                clock_display_clock(state, current);
+            }
 
             clock_check_battery_periodically(state, current);
 
             state->date_time.previous = current;
 
             break;
-        case EVENT_ADJUST_LONG_PRESS:
-            clock_toggle_time_signal(state);
+        case EVENT_KEYPAD_BUTTON_UP:
+        case EVENT_KEYPAD_LONG_UP:
+            current = movement_get_local_date_time();
+            set_should_redraw_screen(state, true);
+            set_alternate_screen(state, false);
+            clock_display_clock(state, current);
             break;
         case EVENT_BACKGROUND_TASK:
             // uncomment this line to snap back to the clock face when the hour signal sounds:
             // movement_move_to_face(state->watch_face_index);
             movement_play_signal();
             break;
+        case EVENT_KEYPAD_BUTTON_DOWN:
+            if (movement_get_key_pressed() == KEYPAD_KEY_DIVIDE) {
+                current = movement_get_local_date_time();
+                set_should_redraw_screen(state, true);
+                set_alternate_screen(state, true);
+                clock_display_date(state, current);
+            break;
+            }
         default:
             return movement_default_loop_handler(event);
     }
@@ -271,7 +322,7 @@ movement_watch_face_advisory_t clock_face_advise(void *context) {
     movement_watch_face_advisory_t retval = { 0 };
     clock_state_t *state = (clock_state_t *) context;
 
-    if (state->time_signal_enabled) {
+    if (movement_time_signal_enabled()) {
         watch_date_time_t date_time = movement_get_local_date_time();
         retval.wants_background_task = date_time.unit.minute == 0;
     }

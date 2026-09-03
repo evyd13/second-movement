@@ -1,7 +1,6 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Wesley Ellis
  * Copyright (c) 2022 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,17 +22,13 @@
  * SOFTWARE.
  */
 
+ // take a look at this: https://github.com/joeycastillo/Sensor-Watch/blob/main/movement/watch_faces/complication/rpn_calculator_alt_face.c
+
 #include <stdlib.h>
 #include <string.h>
 #include "calculator_face.h"
 #include "watch.h"
 #include "watch_utility.h"
-
-// distant future for background task: January 1, 2083
-// see calculator_face_activate for details
-static const watch_date_time_t distant_future = {
-    .unit = {0, 0, 0, 1, 1, 63}
-};
 
 void calculator_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
@@ -43,53 +38,8 @@ void calculator_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     }
 }
 
-static void _calculator_face_update_display(calculator_state_t *calculator_state, bool show_seconds) {
-    if (calculator_state->running) {
-        watch_date_time_t now = watch_rtc_get_date_time();
-        uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
-        uint32_t start_timestamp = watch_utility_date_time_to_unix_time(calculator_state->start_time, 0);
-        calculator_state->seconds_counted = now_timestamp - start_timestamp;
-    }
-
-    if (calculator_state->seconds_counted >= 3456000) {
-        // display maxes out just shy of 40 days, thanks to the limit on the day digits (0-39)
-        calculator_state->running = false;
-        movement_cancel_background_task();
-        watch_display_text(WATCH_POSITION_TOP, "39");
-        watch_display_text(WATCH_POSITION_BOTTOM, "235959");
-        return;
-    }
-
-    watch_duration_t duration = watch_utility_seconds_to_duration(calculator_state->seconds_counted);
-    char buf[14];
-
-    sprintf(buf, "%02d%02d  ", duration.hours, duration.minutes);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf);
-
-    if (duration.days != 0) {
-        sprintf(buf, "%2d", (uint8_t)duration.days);
-        watch_display_text(WATCH_POSITION_TOP, buf);
-    }
-
-    if (show_seconds) {
-        sprintf(buf, "%02d", duration.seconds);
-        watch_display_text(WATCH_POSITION_SECONDS, buf);
-    }
-}
-
 void calculator_face_activate(void *context) {
-    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
-
     calculator_state_t *calculator_state = (calculator_state_t *)context;
-    if (calculator_state->running) {
-        // because the low power update happens on the minute mark, and the wearer could start
-        // the calculator anytime, the low power update could fire up to 59 seconds later than
-        // we need it to, causing the calculator to display stale data.
-        // So let's schedule a background task that will never fire. This will keep the watch
-        // from entering low energy mode while the calculator is on screen. This background task
-        // will remain scheduled until the calculator stops OR this watch face resigns.
-        movement_schedule_background_task(distant_future);
-    }
 }
 
 bool calculator_face_loop(movement_event_t event, void *context) {
@@ -97,65 +47,17 @@ bool calculator_face_loop(movement_event_t event, void *context) {
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            watch_set_colon();
-            watch_display_text(WATCH_POSITION_TOP, "ST");
+            watch_display_text(WATCH_POSITION_BOTTOM, "       0.");
             // fall through
         case EVENT_TICK:
-            if (calculator_state->start_time.reg == 0) {
-                watch_display_text(WATCH_POSITION_BOTTOM, "000000");
-            } else {
-                _calculator_face_update_display(calculator_state, true);
-            }
             break;
         case EVENT_KEYPAD_BUTTON_DOWN:
-            movement_illuminate_led();
-            if (!calculator_state->running) {
-                calculator_state->start_time.reg = 0;
-                calculator_state->seconds_counted = 0;
-                watch_display_text(WATCH_POSITION_BOTTOM, "000000");
-            }
             break;
         case EVENT_ADJUST_BUTTON_DOWN:
-            if (movement_button_should_sound()) {
-                watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
-            }
-            calculator_state->running = !calculator_state->running;
-            if (calculator_state->running) {
-                // we're running now, so we need to set the start_time.
-                if (calculator_state->start_time.reg == 0) {
-                    // if starting from the reset state, easy: we start now.
-                    calculator_state->start_time = watch_rtc_get_date_time();
-                } else {
-                    // if resuming with time already on the clock, the original start time isn't valid anymore!
-                    // so let's fetch the current time...
-                    uint32_t timestamp = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
-                    // ...subtract the seconds we've already counted...
-                    timestamp -= calculator_state->seconds_counted;
-                    // and resume from the "virtual" start time that's that many seconds ago.
-                    calculator_state->start_time = watch_utility_date_time_from_unix_time(timestamp, 0);
-                }
-                // schedule our keepalive task when running...
-                movement_schedule_background_task(distant_future);
-            } else {
-                // and cancel it when stopped.
-                movement_cancel_background_task();
-            }
             break;
         case EVENT_TIMEOUT:
-            // explicitly ignore the timeout event so we stay on screen
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
-            if (!calculator_state->running) {
-                // since the tick animation is running, displaying the stopped time could be misleading,
-                // as it could imply that the calculator is running. instead, show a blank display to
-                // indicate that we are in sleep mode.
-                watch_display_text(WATCH_POSITION_BOTTOM, "----  ");
-            } else {
-                // this OTOH shouldn't happen anymore; if we're running, we shouldn't enter low energy mode
-                _calculator_face_update_display(calculator_state, false);
-                watch_set_indicator(WATCH_INDICATOR_BELL);
-            }
             break;
         default:
             return movement_default_loop_handler(event);

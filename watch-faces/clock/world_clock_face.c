@@ -132,8 +132,8 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
             state->previous_date_time = date_time.reg;
             if ((date_time.reg >> 6) == (previous_date_time >> 6) && event.event_type != EVENT_LOW_ENERGY_UPDATE) {
                 // everything before seconds is the same, don't waste cycles setting those segments.
-                watch_display_character_lp_seconds('0' + date_time.unit.second / 10, 8);
-                watch_display_character_lp_seconds('0' + date_time.unit.second % 10, 9);
+                watch_display_character('0' + date_time.unit.second / 10, 8);
+                watch_display_character('0' + date_time.unit.second % 10, 9);
                 break;
             } else if ((date_time.reg >> 12) == (previous_date_time >> 12) && event.event_type != EVENT_LOW_ENERGY_UPDATE) {
                 // everything before minutes is the same.

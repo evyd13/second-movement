@@ -54,6 +54,7 @@ typedef struct {
     uint32_t minute : 6;
     uint32_t alarm_is_on : 1;
     alarm_face_setting_mode_t setting_mode : 2;
+    uint32_t setting_mode_character_index : 1;
 } alarm_face_state_t;
 
 void alarm_face_setup(uint8_t watch_face_index, void **context_ptr);

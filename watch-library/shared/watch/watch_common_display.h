@@ -403,5 +403,3 @@ static const calculator_digit_mapping_t Calculator_Digits_LCD_Mapping[] = {
 };
 
 void watch_display_character(uint8_t character, uint8_t position);
-void watch_display_character_lp_seconds(uint8_t character, uint8_t position);
-

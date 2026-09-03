@@ -179,6 +179,9 @@ void watch_start_sleep_animation(uint32_t duration) {
     }
     slcd_set_frame_counter_enabled(1, true);
 
+    // TODOEEF: figure out circular shift animation
+    // chapter 42.6.2.4
+    // https://ww1.microchip.com/downloads/aemDocuments/documents/MCU32/ProductDocuments/DataSheets/SAM-L22-Family-Data-Sheet-DS60001465.pdf
     slcd_configure_circular_shift_animation(0b00000001, 1, SLCD_CSRSHIFT_LEFT, 1);
     slcd_set_circular_shift_animation_enabled(true);
     slcd_enable();

@@ -46,7 +46,7 @@ static void cb_extwake_wrapper(void) {
 }
 
 void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool level) {
-    if (pin == HAL_GPIO_BTN_ADJUST_pin()) {
+    if (pin == HAL_GPIO_BTN_MODE_pin()) {
         _callback = callback;
         watch_enable_external_interrupts();
         watch_register_interrupt_callback(pin, cb_extwake_wrapper, level ? INTERRUPT_TRIGGER_RISING : INTERRUPT_TRIGGER_FALLING);
@@ -54,7 +54,7 @@ void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool leve
 }
 
 void watch_disable_extwake_interrupt(uint8_t pin) {
-    if (pin == HAL_GPIO_BTN_ADJUST_pin()) {
+    if (pin == HAL_GPIO_BTN_MODE_pin()) {
         _callback = NULL;
         watch_register_interrupt_callback(pin, NULL, INTERRUPT_TRIGGER_NONE);
     }
@@ -81,6 +81,10 @@ void watch_enter_sleep_mode(void) {
     watch_rtc_disable_all_periodic_callbacks();
 
     // // disable all buttons but mode
+    watch_register_interrupt_callback(HAL_GPIO_KPD_R0_pin(), NULL, INTERRUPT_TRIGGER_NONE);
+    watch_register_interrupt_callback(HAL_GPIO_KPD_R1_pin(), NULL, INTERRUPT_TRIGGER_NONE);
+    watch_register_interrupt_callback(HAL_GPIO_KPD_R2_pin(), NULL, INTERRUPT_TRIGGER_NONE);
+    watch_register_interrupt_callback(HAL_GPIO_KPD_R3_pin(), NULL, INTERRUPT_TRIGGER_NONE);
     watch_register_interrupt_callback(HAL_GPIO_BTN_ADJUST_pin(), NULL, INTERRUPT_TRIGGER_NONE);
     // TODOEEF: call watch_keypad function to disable keypad 
 

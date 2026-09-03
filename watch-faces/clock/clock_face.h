@@ -49,8 +49,9 @@ typedef struct {
     } date_time;
     uint8_t last_battery_check;
     uint8_t watch_face_index;
-    bool time_signal_enabled;
     bool battery_low;
+    bool show_alternate_screen;
+    bool redraw_screen;
 } clock_state_t;
 
 void clock_face_setup(uint8_t watch_face_index, void ** context_ptr);

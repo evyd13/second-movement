@@ -49,6 +49,10 @@ typedef enum {
     KEYPAD_KEY_EQUALS,
 } movement_keypad_key_t;
 
+#ifndef MOVEMENT_BACKLIGHT_KEY
+  #define MOVEMENT_BACKLIGHT_KEY KEYPAD_KEY_PLUS
+#endif
+
 typedef enum {
     KEYPAD_ROW_NONE = 0,
     KEYPAD_ROW_0,
