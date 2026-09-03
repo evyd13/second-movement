@@ -33,6 +33,11 @@
 
 static int world_clock_instances;
 
+static inline void button_beep() {
+    // play a beep as confirmation for a button press (if applicable)
+    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
+}
+
 static void persist_world_clock_settings(world_clock_state_t *state) {
     world_clock_settings_t maybe_settings;
     char filename[13];
@@ -43,35 +48,6 @@ static void persist_world_clock_settings(world_clock_state_t *state) {
     filesystem_read_file(filename, (char *) &maybe_settings.reg, sizeof(world_clock_settings_t));
     if (state->settings.reg != maybe_settings.reg) {
         filesystem_write_file(filename, (char *) &state->settings.reg, sizeof(world_clock_settings_t));
-    }
-}
-
-static void advance_character_at_position(char *character, uint8_t position) {
-    // On custom LCD and classic's position 0 we support all characters.
-    // All we need to do is jump around the ASCII table to the useful ones.
-    switch (*character) {
-        case ' ':
-            *character = 'A';
-            break;
-        case 'z':
-            *character = '0';
-            break;
-        case '9':
-            *character = '{';
-            break;
-        case '}':
-            *character = '*';
-            break;
-        case '.':
-            *character = '/';
-            break;
-        case '/':
-        case 0x7F: // failsafe: if they've broken out of the intended rotation, return them to 0x20
-            *character = ' ';
-            break;
-        default:
-            *character += 1;
-            break;
     }
 }
 
@@ -93,10 +69,6 @@ void world_clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         if (filesystem_file_exists(filename)) {
             filesystem_read_file(filename, (char *) &state->settings.reg, sizeof(world_clock_settings_t));
         } else {
-            // otherwise make all characters blank by default, and set to UTC time
-            state->settings.bit.char_0 = ' ';
-            state->settings.bit.char_1 = ' ';
-            state->settings.bit.char_2 = ' ';
             state->settings.bit.timezone_index = UTZ_UTC;
         }
     }
@@ -155,12 +127,10 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
                     date_time.unit.hour %= 12;
                     if (date_time.unit.hour == 0) date_time.unit.hour = 12;
                 }
-                watch_display_character(state->settings.bit.char_0, 0);
-                watch_display_character(state->settings.bit.char_1, 1);
-                sprintf(buf, "%2d%2d%02d%02d", date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
-                watch_display_text(WATCH_POSITION_TOP, buf);
-                watch_display_text(WATCH_POSITION_HOURS, buf + 2);
-                watch_display_text(WATCH_POSITION_MINUTES, buf + 4);
+                sprintf(buf, "%2d%02d%02d", date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
+                watch_display_text(WATCH_POSITION_TOP, "DT");
+                watch_display_text(WATCH_POSITION_HOURS, buf);
+                watch_display_text(WATCH_POSITION_MINUTES, buf + 2);
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE) {
                     if (!watch_sleep_animation_is_running()) {
                         watch_display_text(WATCH_POSITION_SECONDS, "  ");
@@ -168,11 +138,11 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
                         watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 500);
                     }
                 } else {
-                    watch_display_text(WATCH_POSITION_SECONDS, buf + 6);
+                    watch_display_text(WATCH_POSITION_SECONDS, buf + 4);
                 }
             }
             break;
-        case EVENT_ADJUST_LONG_PRESS:
+        case EVENT_ADJUST_BUTTON_DOWN:
             movement_request_tick_frequency(4);
             state->current_screen = 1;
             break;
@@ -187,35 +157,24 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
 
     switch (event.event_type) {
         case EVENT_MODE_BUTTON_DOWN:
-            persist_world_clock_settings(state);
-            movement_move_to_next_face();
-            return false;
-        case EVENT_KEYPAD_BUTTON_DOWN:
+            if (state->current_screen == 1) {
+                state->settings.bit.timezone_index++;
+                if (state->settings.bit.timezone_index >= NUM_ZONE_NAMES) state->settings.bit.timezone_index = 0;
+                button_beep();
+            }
+            break;
+        case EVENT_ADJUST_BUTTON_DOWN:
             state->current_screen++;
-            if (state->current_screen > 3) {
+            if (state->current_screen > 1) {
                 movement_request_tick_frequency(1);
                 _update_timezone_offset(state);
                 state->current_screen = 0;
                 persist_world_clock_settings(state);
+                watch_clear_display();
                 event.event_type = EVENT_ACTIVATE;
                 return world_clock_face_do_display_mode(event, state);
             }
-            break;
-        case EVENT_ADJUST_BUTTON_DOWN:
-            switch (state->current_screen) {
-                case 1:
-                    advance_character_at_position(&state->settings.bit.char_0, 0);
-                    break;
-                case 2:
-                    advance_character_at_position(&state->settings.bit.char_1, 1);
-                    break;
-                case 3:
-                    // fall through
-                case 4:
-                    state->settings.bit.timezone_index++;
-                    if (state->settings.bit.timezone_index >= NUM_ZONE_NAMES) state->settings.bit.timezone_index = 0;
-                    break;
-            }
+            button_beep();
             break;
         case EVENT_TIMEOUT:
             persist_world_clock_settings(state);
@@ -225,32 +184,22 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
             break;
     }
 
-    char buf[13];
+    char buf[9];
 
     watch_clear_colon();
-    sprintf(buf, "%c%c  %s%c",
-        state->settings.bit.char_0,
-        state->settings.bit.char_1,
-        watch_utility_time_zone_name_at_index(state->settings.bit.timezone_index),
-        state->settings.bit.char_2);
+    sprintf(buf, "%s  ", watch_utility_time_zone_name_at_index(state->settings.bit.timezone_index));
     watch_clear_indicator(WATCH_INDICATOR_PM);
 
     // blink up the parameter we're setting
     if (event.subsecond % 2) {
         switch (state->current_screen) {
             case 1:
-            case 2:
-                buf[state->current_screen - 1] = '_';
-                break;
-            case 3:
-                // fall through
-            case 4:
-                memcpy(buf + 4, "      ", 6);
+                memcpy(buf, "        ", 8);
                 break;
         }
     }
 
-    watch_display_text(WATCH_POSITION_FULL, buf);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
     return true;
 }

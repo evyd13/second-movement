@@ -48,9 +48,6 @@
 
 typedef union {
     struct {
-        char char_0;
-        char char_1;
-        char char_2;
         uint8_t timezone_index;
     } bit;
     uint32_t reg;

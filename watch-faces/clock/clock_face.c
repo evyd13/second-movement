@@ -110,7 +110,6 @@ static void clock_check_battery_periodically(clock_state_t *state, watch_date_ti
     clock_indicate_low_available_power(state);
 }
 
-
 static void date_display_all(watch_date_time_t date_time) {
     char buf[6+1];
 
