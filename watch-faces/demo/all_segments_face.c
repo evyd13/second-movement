@@ -87,8 +87,7 @@ bool all_segments_face_loop(movement_event_t event, void *context) {
                 all_segments_display_name(state);
             }
             break;
-        case EVENT_MODE_BUTTON_UP:
-        case EVENT_MODE_LONG_UP:
+        case EVENT_MODE_BUTTON_DOWN:
             if(state->face_mode == ALL_SEGMENTS_FACE_MODE_ALL) {
                 state->face_mode = ALL_SEGMENTS_FACE_MODE_NAME;
                 all_segments_display_name(state);

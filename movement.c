@@ -556,7 +556,7 @@ movement_keypad_key_t movement_scan_matrix(void) {
 
 bool movement_default_loop_handler(movement_event_t event) {
     switch (event.event_type) {
-        case EVENT_MODE_BUTTON_UP:
+        case EVENT_MODE_BUTTON_DOWN:
             movement_move_to_next_face();
             break;
         case EVENT_KEYPAD_BUTTON_DOWN:

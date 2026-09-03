@@ -186,7 +186,7 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
 static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clock_state_t *state) {
 
     switch (event.event_type) {
-        case EVENT_MODE_BUTTON_UP:
+        case EVENT_MODE_BUTTON_DOWN:
             persist_world_clock_settings(state);
             movement_move_to_next_face();
             return false;

@@ -298,6 +298,7 @@ static const weekday_digit_mapping_t Weekday_Digits_LCD_Mapping[] = {
     },
 };
 
+//TODOEEF: swap seg08 (colon) and seg01 so that the colon can blink
 static const calculator_digit_mapping_t Calculator_Digits_LCD_Mapping[] = {
     // Positions 2 and 3 are the hour digits
     {

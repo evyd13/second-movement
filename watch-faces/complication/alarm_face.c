@@ -34,6 +34,13 @@
 // Private
 //
 
+uint8_t get_displayed_hour(uint8_t hour) {
+    if (!movement_clock_mode_24h() ) {
+        return hour % 12 ? hour % 12 : 12;
+    }
+    return hour;
+}
+
 static void _alarm_face_display_alarm_time(alarm_face_state_t *state) {
     uint8_t hour = state->hour;
 
@@ -48,7 +55,7 @@ static void _alarm_face_display_alarm_time(alarm_face_state_t *state) {
             watch_set_indicator(WATCH_INDICATOR_AM);
         watch_clear_indicator(WATCH_INDICATOR_PM);
         }
-        hour = hour % 12 ? hour % 12 : 12;
+        hour = get_displayed_hour(hour);
     }
 
     static char lcdbuf[7];
@@ -57,6 +64,7 @@ static void _alarm_face_display_alarm_time(alarm_face_state_t *state) {
     watch_display_text(WATCH_POSITION_HOURS, lcdbuf);
     watch_display_text(WATCH_POSITION_MINUTES, lcdbuf+2);
 }
+
 
 static inline void button_beep() {
     // play a beep as confirmation for a button press (if applicable)
@@ -82,6 +90,7 @@ static void alarm_toggle_time_signal(alarm_face_state_t *state) {
 
 void end_setting(alarm_face_state_t *state) {
     // If we're setting the minute, advance back to normal mode and cancel fast tick.
+    state->setting_mode_character_index = 0;
     state->setting_mode = ALARM_FACE_SETTING_MODE_NONE;
     movement_request_tick_frequency(1);
     // beep to confirm setting.
@@ -98,6 +107,12 @@ void toggle_am_pm(alarm_face_state_t *state) {
     _alarm_face_display_alarm_time(state);
 }
 
+uint8_t apply_pm_to_value(alarm_face_state_t *state, uint8_t value) {
+    if (!movement_clock_mode_24h() && state->hour >= 12 ) {
+        return value + 12;
+    } 
+    return value;
+}
 //
 // Exported
 //
@@ -179,28 +194,34 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                     break;
                 case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
                     switch(movement_get_key_pressed()) {
-                        uint8_t maximum_value = movement_clock_mode_24h() ? 23 : 12;
                         case KEYPAD_KEY_DECIMAL:
                             toggle_am_pm(state);
                             break;
                         default:
                             if(movement_is_number_pressed()) {
-                                switch(movement_get_keypad_number_pressed()) {
-                                    case 3:
-                                    case 4:
-                                    case 5:
-                                    case 6:
-                                    case 7:
-                                    case 8:
-                                    case 9:
-                                    
-                                        break;
-                                    case 0:
-                                        break;
-                                    case 1:
-                                        break;
-                                    case 2:
-                                        break;
+                                uint8_t maximum_value = movement_clock_mode_24h() ? 23 : 12;
+                                uint8_t current_value = get_displayed_hour(state->hour);
+                                uint8_t new_value;
+                                uint8_t input = movement_get_keypad_number_pressed();
+                                uint8_t remainder = current_value % 10;
+
+                                if (state->setting_mode_character_index == 0) {
+                                    new_value = input * 10 + remainder;
+                                } else {
+                                    new_value = current_value - remainder + input;
+                                }
+
+                                if (new_value > maximum_value) {
+                                    new_value = (new_value/10)*10;
+                                };
+                                if (new_value > maximum_value) break;
+                                state->hour = apply_pm_to_value(state, new_value);
+                                
+                                if (state->setting_mode_character_index == 0) {
+                                    state->setting_mode_character_index = 1;
+                                } else {
+                                    state->setting_mode_character_index = 0;
+                                    state->setting_mode = ALARM_FACE_SETTING_MODE_SETTING_MINUTE;
                                 }
                             }
                             break;
@@ -212,6 +233,32 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                             toggle_am_pm(state);
                             break;
                         default:
+                            if(movement_is_number_pressed()) {
+                                uint8_t maximum_value = 59;
+                                uint8_t current_value = state->minute;
+                                uint8_t new_value;
+                                uint8_t input = movement_get_keypad_number_pressed();
+                                uint8_t remainder = current_value % 10;
+
+                                if (state->setting_mode_character_index == 0) {
+                                    new_value = input * 10 + remainder;
+                                } else {
+                                    new_value = current_value - remainder + input;
+                                }
+
+                                if (new_value > maximum_value) {
+                                    new_value = (new_value/10)*10;
+                                };
+                                if (new_value > maximum_value) break;
+                                state->minute = new_value;
+                                
+                                if (state->setting_mode_character_index == 0) {
+                                    state->setting_mode_character_index = 1;
+                                } else {
+                                    end_setting(state);
+                                    button_beep();
+                                }
+                            }
                             break;
                     }
                     break;
@@ -221,7 +268,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
             }
             _alarm_face_display_alarm_time(state);
             break;
-        case EVENT_MODE_BUTTON_UP:
+        case EVENT_MODE_BUTTON_DOWN:
             switch (state->setting_mode) {
                 case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
                     // If we're setting the hour, advance to minute set mode.
@@ -241,17 +288,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                             state->setting_mode_character_index = 1;
                             break;
                         default:
-                            state->setting_mode_character_index = 0;
-                            // If we're setting the minute, advance back to normal mode and cancel fast tick.
-                            state->setting_mode = ALARM_FACE_SETTING_MODE_NONE;
-                            movement_request_tick_frequency(1);
-                            // beep to confirm setting.
-                            button_beep();
-                            // also turn the alarm on since they just set it.
-                            state->alarm_is_on = 1;
-                            movement_set_alarm_enabled(true);
-                            watch_set_indicator(WATCH_INDICATOR_SIGNAL);
-                            _alarm_face_display_alarm_time(state);
+                            end_setting(state);
                             break;
                     }
                     break;
@@ -263,6 +300,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
         case EVENT_ADJUST_BUTTON_UP:
             if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
                 // long press in normal mode: move to hour setting mode, request fast tick.
+                state->setting_mode_character_index = 0;
                 state->setting_mode = ALARM_FACE_SETTING_MODE_SETTING_HOUR;
                 movement_request_tick_frequency(4);
                 button_beep();

@@ -148,7 +148,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             finetune_update_display();
             break;
 
-        case EVENT_MODE_BUTTON_UP:
+        case EVENT_MODE_BUTTON_DOWN:
             // Only allow for fast exit when correction is 0!!!
             if (finetune_page == 0 && total_adjustment == 0) {
                 movement_move_to_next_face();
