@@ -54,10 +54,10 @@ bool voltage_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
             date_time = movement_get_local_date_time();
             if (date_time.unit.second % 5 == 4) {
-                watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+                watch_set_indicator(WATCH_INDICATOR_K);
             } else if (date_time.unit.second % 5 == 0) {
                 _voltage_face_update_display();
-                watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                watch_clear_indicator(WATCH_INDICATOR_K);
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
@@ -68,7 +68,7 @@ bool voltage_face_loop(movement_event_t event, void *context) {
             }
             // update once an hour
             if (date_time.unit.minute == 0) {
-                watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                watch_clear_indicator(WATCH_INDICATOR_K);
                 _voltage_face_update_display();
                 watch_display_text(WATCH_POSITION_SECONDS, "  ");
             }

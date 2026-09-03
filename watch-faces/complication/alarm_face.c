@@ -259,7 +259,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                     break;
             }
             break;
-        case EVENT_ADJUST_BUTTON_DOWN:
+        case EVENT_ADJUST_BUTTON_UP:
             if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
                 // long press in normal mode: move to hour setting mode, request fast tick.
                 state->setting_mode = ALARM_FACE_SETTING_MODE_SETTING_HOUR;

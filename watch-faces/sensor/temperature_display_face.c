@@ -89,10 +89,10 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
                 // Not 100% on this, but I like the idea of using the signal indicator to indicate that we're sensing data.
                 // In this case we turn the indicator on a second before the reading is taken, and clear it when we're done.
                 // In reality the measurement takes a fraction of a second, but this is just to show something is happening.
-                watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+                watch_set_indicator(WATCH_INDICATOR_K);
             } else if (date_time.unit.second % 5 == 0) {
                 _temperature_display_face_update_display(movement_use_imperial_units());
-                watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                watch_clear_indicator(WATCH_INDICATOR_K);
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
@@ -102,7 +102,7 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
             }
             // update every 5 minutes
             if (date_time.unit.minute % 5 == 0) {
-                watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                watch_clear_indicator(WATCH_INDICATOR_K);
                 _temperature_display_face_update_display(movement_use_imperial_units());
             }
             break;
