@@ -12,4 +12,5 @@ SRCS += \
   ./watch-faces/settings/finetune_face.c \
   ./watch-faces/settings/nanosec_face.c \
   ./watch-faces/clock/beats_face.c \
+  ./watch-faces/clock/close_enough_face.c \
 # New watch faces go above this line.

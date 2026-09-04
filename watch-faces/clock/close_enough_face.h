@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2025 Ruben Nic
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,36 @@
 
 #pragma once
 
-#include "clock_face.h"
-#include "calculator_face.h"
-#include "alarm_face.h"
-#include "world_clock_face.h"
-#include "stopwatch_face.h"
-#include "all_segments_face.h"
-#include "voltage_face.h"
-#include "temperature_display_face.h"
-#include "set_time_face.h"
-#include "settings_face.h"
-#include "finetune_face.h"
-#include "nanosec_face.h"
-#include "beats_face.h"
-#include "close_enough_face.h"
-// New includes go above this line.
+#include "movement.h"
+
+/*
+ * CLOSE ENOUGH CLOCK FACE
+ *
+ * Displays the current time; but only in periods of 5.
+ * Some examples:
+ * - 5:10 is "10 past 5" displayed as "10 P 5"
+ * - 5:45 is "15 to 6" displayed as "15 2 6"
+ * - 6:00 is "6 o'clock" displayed as "6 OC"
+ */
+
+typedef struct {
+    int prev_five_minute_period;
+    int prev_min_checked;
+    uint8_t last_battery_check;
+    bool battery_low;
+    bool redraw_screen;
+    bool show_alternate_screen;
+} close_enough_state_t;
+
+void close_enough_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void close_enough_face_activate(void *context);
+bool close_enough_face_loop(movement_event_t event, void *context);
+void close_enough_face_resign(void *context);
+
+#define close_enough_face ((const watch_face_t){ \
+    close_enough_face_setup, \
+    close_enough_face_activate, \
+    close_enough_face_loop, \
+    close_enough_face_resign, \
+    NULL, \
+})
