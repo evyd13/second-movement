@@ -128,16 +128,20 @@ void watch_start_character_blink(char character, uint32_t duration) {
 }
 
 void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32_t duration) {
-    uint8_t mask = 0;
+    uint8_t mask_seg0 = 0;
+    uint8_t mask_seg1 = 0;
     switch (indicator) {
         case WATCH_INDICATOR_SIGNAL:
-            mask = 0b001;
+            mask_seg0 = 0b001;
             break;
         case WATCH_INDICATOR_BELL:
-            mask = 0b010;
+            mask_seg0 = 0b010;
             break;
         case WATCH_INDICATOR_K:
-            mask = 0b100;
+            mask_seg0 = 0b100;
+            break;
+        case WATCH_INDICATOR_COLON:
+            mask_seg1 = 0b010;
             break;
         default:
             return;
@@ -154,7 +158,7 @@ void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32
 
     slcd_disable();
     slcd_set_blink_enabled(false);
-    slcd_configure_blink(false, mask, 0, 0);
+    slcd_configure_blink(false, mask_seg0, mask_seg1, 0);
     slcd_set_blink_enabled(true);
     slcd_enable();
 }
