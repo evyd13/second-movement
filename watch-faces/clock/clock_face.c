@@ -42,16 +42,16 @@
 #define CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD 2400
 #endif
 
-bool should_show_alternate_screen(clock_state_t *state) {
+bool clock_face_should_show_alternate_screen(clock_state_t *state) {
     return state->show_alternate_screen;
 }
-void set_alternate_screen(clock_state_t *state, bool value) {
+void clock_face_set_alternate_screen(clock_state_t *state, bool value) {
     state->show_alternate_screen = value;
 }
-void set_should_redraw_screen(clock_state_t *state, bool value) {
+void clock_face_set_should_redraw_screen(clock_state_t *state, bool value) {
     state->redraw_screen = value;
 }
-bool should_redraw_screen(clock_state_t *state) {
+bool clock_face_should_redraw_screen(clock_state_t *state) {
     return state->redraw_screen;
 }
 
@@ -182,7 +182,7 @@ static bool clock_display_some(watch_date_time_t current, watch_date_time_t prev
 }
 
 static void clock_display_clock(clock_state_t *state, watch_date_time_t current) {
-    if (should_redraw_screen(state) || !clock_display_some(current, state->date_time.previous)) {
+    if (clock_face_should_redraw_screen(state) || !clock_display_some(current, state->date_time.previous)) {
         if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
             clock_indicate_pm_am(current);
             current = clock_24h_to_12h(current);
@@ -191,16 +191,16 @@ static void clock_display_clock(clock_state_t *state, watch_date_time_t current)
         watch_set_colon();
         watch_display_character(' ', 7);
         clock_display_all(current);
-        set_should_redraw_screen(state, false);
+        clock_face_set_should_redraw_screen(state, false);
     }
 }
 
 static void clock_display_date(clock_state_t *state, watch_date_time_t current) {
-    if (should_redraw_screen(state)) {
+    if (clock_face_should_redraw_screen(state)) {
         watch_clear_colon();
         watch_display_character('-', 7);
         date_display_all(current);
-        set_should_redraw_screen(state, false);
+        clock_face_set_should_redraw_screen(state, false);
     }
 }
 
@@ -275,7 +275,7 @@ bool clock_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
         case EVENT_ACTIVATE:
             current = movement_get_local_date_time();
-            if (should_show_alternate_screen(state)) {
+            if (clock_face_should_show_alternate_screen(state)) {
                 clock_display_date(state, current);
             } else {
                 clock_display_clock(state, current);
@@ -289,8 +289,8 @@ bool clock_face_loop(movement_event_t event, void *context) {
         case EVENT_KEYPAD_BUTTON_UP:
         case EVENT_KEYPAD_LONG_UP:
             current = movement_get_local_date_time();
-            set_should_redraw_screen(state, true);
-            set_alternate_screen(state, false);
+            clock_face_set_should_redraw_screen(state, true);
+            clock_face_set_alternate_screen(state, false);
             clock_display_clock(state, current);
             break;
         case EVENT_BACKGROUND_TASK:
@@ -301,8 +301,8 @@ bool clock_face_loop(movement_event_t event, void *context) {
         case EVENT_KEYPAD_BUTTON_DOWN:
             if (movement_get_key_pressed() == KEYPAD_KEY_DIVIDE) {
                 current = movement_get_local_date_time();
-                set_should_redraw_screen(state, true);
-                set_alternate_screen(state, true);
+                clock_face_set_should_redraw_screen(state, true);
+                clock_face_set_alternate_screen(state, true);
                 clock_display_date(state, current);
             break;
             }

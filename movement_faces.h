@@ -36,4 +36,5 @@
 #include "settings_face.h"
 #include "finetune_face.h"
 #include "nanosec_face.h"
+#include "beats_face.h"
 // New includes go above this line.

@@ -57,6 +57,7 @@ typedef struct {
     world_clock_settings_t settings;
     uint8_t clock_index;
     uint8_t current_screen;
+    bool show_alternate_screen;
     uint32_t previous_date_time;
     int32_t current_offset;
 } world_clock_state_t;

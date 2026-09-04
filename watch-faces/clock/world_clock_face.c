@@ -38,6 +38,14 @@ static inline void button_beep() {
     if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
 }
 
+bool world_clock_face_should_show_alternate_screen(world_clock_state_t *state) {
+    return state->show_alternate_screen;
+}
+
+void world_clock_face_set_alternate_screen(world_clock_state_t *state, bool value) {
+    state->show_alternate_screen = value;
+}
+
 static void persist_world_clock_settings(world_clock_state_t *state) {
     world_clock_settings_t maybe_settings;
     char filename[13];
@@ -79,6 +87,7 @@ void world_clock_face_activate(void *context) {
 
     state->current_screen = 0;
     _update_timezone_offset(state);
+    world_clock_face_set_alternate_screen(state, false);
 
     if (watch_sleep_animation_is_running()) {
         watch_stop_sleep_animation();
@@ -121,8 +130,10 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
                     // if we are in 12 hour mode, do some cleanup.
                     if (date_time.unit.hour < 12) {
                         watch_clear_indicator(WATCH_INDICATOR_PM);
+                        watch_set_indicator(WATCH_INDICATOR_AM);
                     } else {
                         watch_set_indicator(WATCH_INDICATOR_PM);
+                        watch_clear_indicator(WATCH_INDICATOR_AM);
                     }
                     date_time.unit.hour %= 12;
                     if (date_time.unit.hour == 0) date_time.unit.hour = 12;
@@ -145,6 +156,42 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
         case EVENT_ADJUST_BUTTON_DOWN:
             movement_request_tick_frequency(4);
             state->current_screen = 1;
+            break;
+        default:
+            return movement_default_loop_handler(event);
+    }
+
+    return true;
+}
+
+static bool world_clock_face_do_date_mode(movement_event_t event, world_clock_state_t *state) {
+    uint32_t previous_date_time;
+    watch_date_time_t date_time;
+    switch (event.event_type) {
+        case EVENT_ACTIVATE:
+            watch_display_character('-', 7);
+            // fall through
+        case EVENT_TICK:
+        case EVENT_LOW_ENERGY_UPDATE:
+            date_time = movement_get_date_time_in_zone(state->settings.bit.timezone_index);
+            previous_date_time = state->previous_date_time;
+            char buf[6+1];
+
+            snprintf(
+                buf,
+                sizeof(buf),
+            "%02d%2d%2d",
+                date_time.unit.year+20,
+                date_time.unit.month,
+                date_time.unit.day
+            );
+
+            watch_display_text(WATCH_POSITION_TOP, watch_utility_get_weekday(date_time));
+            watch_display_text(WATCH_POSITION_HOURS, buf);
+            watch_display_text(WATCH_POSITION_MINUTES, buf+2);
+            watch_display_text(WATCH_POSITION_SECONDS, buf+4);
+            watch_clear_indicator(WATCH_INDICATOR_AM);
+            watch_clear_indicator(WATCH_INDICATOR_PM);
             break;
         default:
             return movement_default_loop_handler(event);
@@ -208,7 +255,29 @@ bool world_clock_face_loop(movement_event_t event, void *context) {
     world_clock_state_t *state = (world_clock_state_t *)context;
 
     if (state->current_screen == 0) {
-        return world_clock_face_do_display_mode(event, state);
+        switch (event.event_type) {
+            case EVENT_KEYPAD_BUTTON_DOWN:
+                switch(movement_get_key_pressed()) {
+                    case KEYPAD_KEY_DIVIDE:
+                        world_clock_face_set_alternate_screen(state, true);
+                        watch_clear_display();
+                        event.event_type = EVENT_ACTIVATE;
+                        return world_clock_face_do_date_mode(event, state);
+                }
+                break;
+            case EVENT_KEYPAD_BUTTON_UP:
+            case EVENT_KEYPAD_LONG_UP:
+                world_clock_face_set_alternate_screen(state, false);
+                watch_clear_display();
+                event.event_type = EVENT_ACTIVATE;
+                return world_clock_face_do_display_mode(event, state);
+                break;
+        }
+        if (world_clock_face_should_show_alternate_screen(state)) {
+            return world_clock_face_do_date_mode(event, state);
+        } else {
+            return world_clock_face_do_display_mode(event, state);
+        }
     } else {
         return _world_clock_face_do_settings_mode(event, state);
     }
