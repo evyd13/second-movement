@@ -102,7 +102,6 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
     watch_date_time_t date_time;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_AM);
             watch_set_colon();
             state->previous_date_time = 0xFFFFFFFF;
             // fall through
@@ -207,6 +206,9 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
             if (state->current_screen == 1) {
                 state->settings.bit.timezone_index++;
                 if (state->settings.bit.timezone_index >= NUM_ZONE_NAMES) state->settings.bit.timezone_index = 0;
+                char buf[3];
+                sprintf(buf, "%02d", state->settings.bit.timezone_index+1);
+                watch_display_text(WATCH_POSITION_TOP, buf);
                 button_beep();
             }
             break;
@@ -231,11 +233,15 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
             break;
     }
 
-    char buf[9];
-
     watch_clear_colon();
-    sprintf(buf, "%s  ", watch_utility_time_zone_name_at_index(state->settings.bit.timezone_index));
     watch_clear_indicator(WATCH_INDICATOR_PM);
+    watch_clear_indicator(WATCH_INDICATOR_AM);
+    char buf_index[3];
+    sprintf(buf_index, "%02d", state->settings.bit.timezone_index+1);
+    watch_display_text(WATCH_POSITION_TOP, buf_index);
+
+    char buf[9];
+    sprintf(buf, "%s  ", watch_utility_time_zone_name_at_index(state->settings.bit.timezone_index));
 
     // blink up the parameter we're setting
     if (event.subsecond % 2) {

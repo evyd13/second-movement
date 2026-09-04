@@ -33,7 +33,6 @@ const watch_face_t watch_faces[] = {
     alarm_face, // required to enable alarm and time signal, simulating OEM functionality.
     world_clock_face,
     stopwatch_face,
-    beats_face,
 
     temperature_display_face,
     voltage_face,

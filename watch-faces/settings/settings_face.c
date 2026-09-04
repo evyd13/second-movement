@@ -26,24 +26,29 @@
 #include "settings_face.h"
 #include "watch.h"
 
-static void clock_setting_display(uint8_t subsecond) {
+static inline void button_beep() {
+    // play a beep as confirmation for a button press (if applicable)
+    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
+}
+
+static void clock_setting_display(uint8_t subsecond, bool is_editing) {
     watch_display_text(WATCH_POSITION_TOP, "CL");
-    if (subsecond % 2) {
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         if (movement_clock_mode_24h()) watch_display_text(WATCH_POSITION_BOTTOM, "24h");
         else watch_display_text(WATCH_POSITION_BOTTOM, "12h");
     } else {
-        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+        watch_display_text(WATCH_POSITION_BOTTOM, "        ");
     }
 }
 
-static void clock_setting_advance(void) {
+static void clock_setting_advance(bool is_editing) {
     movement_set_clock_mode_24h(((movement_clock_mode_24h() + 1) % MOVEMENT_NUM_CLOCK_MODES));
 }
 
-static void beep_setting_display(uint8_t subsecond) {
+static void beep_setting_display(uint8_t subsecond, bool is_editing) {
     watch_display_text(WATCH_POSITION_TOP, "BT");
-    watch_display_text(WATCH_POSITION_BOTTOM, " beep ");
-    if (subsecond % 2) {
+    watch_display_text(WATCH_POSITION_BOTTOM, " beep   ");
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         if (movement_button_should_sound()) {
             if (movement_button_volume() == WATCH_BUZZER_VOLUME_LOUD) {
                 // H for HIGH
@@ -62,29 +67,29 @@ static void beep_setting_display(uint8_t subsecond) {
     }
 }
 
-static void beep_setting_advance(void) {
+static void beep_setting_advance(bool is_editing) {
     if (!movement_button_should_sound()) {
         // was muted. make it soft.
         movement_set_button_should_sound(true);
         movement_set_button_volume(WATCH_BUZZER_VOLUME_SOFT);
-        beep_setting_display(1);
+        beep_setting_display(1, is_editing);
         watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_SOFT);
     } else if (movement_button_volume() == WATCH_BUZZER_VOLUME_SOFT) {
         // was soft. make it loud.
         movement_set_button_volume(WATCH_BUZZER_VOLUME_LOUD);
-        beep_setting_display(1);
+        beep_setting_display(1, is_editing);
         watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_LOUD);
     } else {
         // was loud. make it silent.
         movement_set_button_should_sound(false);
-        beep_setting_display(1);
+        beep_setting_display(1, is_editing);
     }
 }
 
-static void signal_setting_display(uint8_t subsecond) {
+static void signal_setting_display(uint8_t subsecond, bool is_editing) {
     watch_display_text(WATCH_POSITION_TOP, "SI");
     watch_display_text(WATCH_POSITION_BOTTOM, "SIGNAL");
-    if (subsecond % 2) {
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         if (movement_signal_volume() == WATCH_BUZZER_VOLUME_LOUD) {
             // H for HIGH
             watch_display_text(WATCH_POSITION_SECONDS, " H");
@@ -98,7 +103,7 @@ static void signal_setting_display(uint8_t subsecond) {
     }
 }
 
-static void signal_setting_advance(void) {
+static void signal_setting_advance(bool is_editing) {
     if (movement_signal_volume() == WATCH_BUZZER_VOLUME_SOFT) {
         // was soft. make it loud.
         movement_set_signal_volume(WATCH_BUZZER_VOLUME_LOUD);
@@ -107,15 +112,15 @@ static void signal_setting_advance(void) {
         movement_set_signal_volume(WATCH_BUZZER_VOLUME_SOFT);
     }
 
-    signal_setting_display(1);
+    signal_setting_display(1, is_editing);
     movement_play_signal();
 }
 
 
-static void alarm_setting_display(uint8_t subsecond) {
+static void alarm_setting_display(uint8_t subsecond, bool is_editing) {
     watch_display_text(WATCH_POSITION_TOP, "AL");
     watch_display_text(WATCH_POSITION_BOTTOM, "ALARM ");
-    if (subsecond % 2) {
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         if (movement_alarm_volume() == WATCH_BUZZER_VOLUME_LOUD) {
             // H for HIGH
             watch_display_text(WATCH_POSITION_SECONDS, " H");
@@ -129,7 +134,7 @@ static void alarm_setting_display(uint8_t subsecond) {
     }
 }
 
-static void alarm_setting_advance(void) {
+static void alarm_setting_advance(bool is_editing) {
     if (movement_alarm_volume() == WATCH_BUZZER_VOLUME_SOFT) {
         // was soft. make it loud.
         movement_set_alarm_volume(WATCH_BUZZER_VOLUME_LOUD);
@@ -139,79 +144,79 @@ static void alarm_setting_advance(void) {
 
     }
 
-    alarm_setting_display(1);
+    alarm_setting_display(1, is_editing);
     movement_play_alarm();
 }
 
-static void timeout_setting_display(uint8_t subsecond) {
+static void timeout_setting_display(uint8_t subsecond, bool is_editing) {
     watch_display_text(WATCH_POSITION_TOP, "TO");
-    if (subsecond % 2) {
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         switch (movement_get_fast_tick_timeout()) {
             case 0:
-                watch_display_text(WATCH_POSITION_BOTTOM, "60 SeC");
+                watch_display_text(WATCH_POSITION_BOTTOM, "60 SeCs ");
                 break;
             case 1:
-                watch_display_text(WATCH_POSITION_BOTTOM, "2 n&in");
+                watch_display_text(WATCH_POSITION_BOTTOM, "2 n&ins ");
                 break;
             case 2:
-                watch_display_text(WATCH_POSITION_BOTTOM, "5 n&in");
+                watch_display_text(WATCH_POSITION_BOTTOM, "5 n&ins ");
                 break;
             case 3:
-                watch_display_text(WATCH_POSITION_BOTTOM, "30n&in");
+                watch_display_text(WATCH_POSITION_BOTTOM, "30n&ins ");
                 break;
         }
     } else {
-        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+        watch_display_text(WATCH_POSITION_BOTTOM, "        ");
     }
 }
 
-static void timeout_setting_advance(void) {
+static void timeout_setting_advance(bool is_editing) {
     movement_set_fast_tick_timeout((movement_get_fast_tick_timeout() + 1));
 }
 
-static void low_energy_setting_display(uint8_t subsecond) {
+static void low_energy_setting_display(uint8_t subsecond, bool is_editing) {
     watch_display_text(WATCH_POSITION_TOP, "LE");
-    if (subsecond % 2) {
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         switch (movement_get_low_energy_timeout()) {
             case 0:
-                watch_display_text(WATCH_POSITION_BOTTOM, " Never");
+                watch_display_text(WATCH_POSITION_BOTTOM, " Never  ");
                 break;
             case 1:
-                watch_display_text(WATCH_POSITION_BOTTOM, "10n&in");
+                watch_display_text(WATCH_POSITION_BOTTOM, "10n&ins ");
                 break;
             case 2:
-                watch_display_text(WATCH_POSITION_BOTTOM, "1 hour");
+                watch_display_text(WATCH_POSITION_BOTTOM, "1 hour  ");
                 break;
             case 3:
-                watch_display_text(WATCH_POSITION_BOTTOM, "2 hour");
+                watch_display_text(WATCH_POSITION_BOTTOM, "2 hours ");
                 break;
             case 4:
-                watch_display_text(WATCH_POSITION_BOTTOM, "6 hour");
+                watch_display_text(WATCH_POSITION_BOTTOM, "6 hours ");
                 break;
             case 5:
-                watch_display_text(WATCH_POSITION_BOTTOM, "12 hr");
+                watch_display_text(WATCH_POSITION_BOTTOM, "12 hours");
                 break;
             case 6:
-                watch_display_text(WATCH_POSITION_BOTTOM, " 1 day");
+                watch_display_text(WATCH_POSITION_BOTTOM, " 1 day  ");
                 break;
             case 7:
-                watch_display_text(WATCH_POSITION_BOTTOM, " 7 day");
+                watch_display_text(WATCH_POSITION_BOTTOM, " 7 days ");
                 break;
         }
     } else {
-        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+        watch_display_text(WATCH_POSITION_BOTTOM, "        ");
     }
 }
 
-static void low_energy_setting_advance(void) {
+static void low_energy_setting_advance(bool is_editing) {
     movement_set_low_energy_timeout((movement_get_low_energy_timeout() + 1));
 }
 
-static void led_duration_setting_display(uint8_t subsecond) {
+static void led_duration_setting_display(uint8_t subsecond, bool is_editing) {
     char buf[8];
 
     watch_display_text(WATCH_POSITION_TOP, "LT");
-    if (subsecond % 2) {
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         if (movement_get_backlight_dwell() == 0) {
             watch_display_text(WATCH_POSITION_BOTTOM, "instnt");
         } else if (movement_get_backlight_dwell() == 0b111) {
@@ -221,11 +226,11 @@ static void led_duration_setting_display(uint8_t subsecond) {
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
         }
     } else {
-        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+        watch_display_text(WATCH_POSITION_BOTTOM, "        ");
     }
 }
 
-static void led_duration_setting_advance(void) {
+static void led_duration_setting_advance(bool is_editing) {
     movement_set_backlight_dwell(movement_get_backlight_dwell() + 1);
     if (movement_get_backlight_dwell() > 3) {
         // set all bits to disable the LED
@@ -233,13 +238,13 @@ static void led_duration_setting_advance(void) {
     }
 }
 
-static void red_led_setting_display(uint8_t subsecond) {
+static void red_led_setting_display(uint8_t subsecond, bool is_editing) {
     char buf[8];
     movement_color_t color = movement_backlight_color();
 
     watch_display_text(WATCH_POSITION_TOP, "LT");
-    watch_display_text(WATCH_POSITION_BOTTOM, " red  ");
-    if (subsecond % 2) {
+    watch_display_text(WATCH_POSITION_BOTTOM, " red    ");
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         sprintf(buf, "%2d", color.red);
         watch_display_text(WATCH_POSITION_TOP, buf);
     } else {
@@ -247,19 +252,19 @@ static void red_led_setting_display(uint8_t subsecond) {
     }
 }
 
-static void red_led_setting_advance(void) {
+static void red_led_setting_advance(bool is_editing) {
     movement_color_t color = movement_backlight_color();
     color.red++;
     movement_set_backlight_color(color);
 }
 
-static void green_led_setting_display(uint8_t subsecond) {
+static void green_led_setting_display(uint8_t subsecond, bool is_editing) {
     char buf[8];
     movement_color_t color = movement_backlight_color();
 
     watch_display_text(WATCH_POSITION_TOP, "LT");
-    watch_display_text(WATCH_POSITION_BOTTOM, " green");
-    if (subsecond % 2) {
+    watch_display_text(WATCH_POSITION_BOTTOM, " green  ");
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         sprintf(buf, "%2d", color.green);
         watch_display_text(WATCH_POSITION_TOP, buf);
     } else {
@@ -267,19 +272,19 @@ static void green_led_setting_display(uint8_t subsecond) {
     }
 }
 
-static void green_led_setting_advance(void) {
+static void green_led_setting_advance(bool is_editing) {
     movement_color_t color = movement_backlight_color();
     color.green++;
     movement_set_backlight_color(color);
 }
 
-static void blue_led_setting_display(uint8_t subsecond) {
+static void blue_led_setting_display(uint8_t subsecond, bool is_editing) {
     char buf[8];
     movement_color_t color = movement_backlight_color();
 
     watch_display_text(WATCH_POSITION_TOP, "LT");
-    watch_display_text(WATCH_POSITION_BOTTOM, " blue ");
-    if (subsecond % 2) {
+    watch_display_text(WATCH_POSITION_BOTTOM, " blue   ");
+    if ((subsecond % 2 && is_editing) || !is_editing) {
         sprintf(buf, "%2d", color.blue);
         watch_display_text(WATCH_POSITION_TOP, buf);
     } else {
@@ -287,13 +292,13 @@ static void blue_led_setting_display(uint8_t subsecond) {
     }
 }
 
-static void blue_led_setting_advance(void) {
+static void blue_led_setting_advance(bool is_editing) {
     movement_color_t color = movement_backlight_color();
     color.blue++;
     movement_set_backlight_color(color);
 }
 
-static void  git_hash_setting_display(uint8_t subsecond) {
+static void  git_hash_setting_display(uint8_t subsecond, bool is_editing) {
     (void) subsecond;
     char buf[8];
     // BUILD_GIT_HASH will already be truncated to 6 characters in the makefile, but this is to be safe.
@@ -302,7 +307,7 @@ static void  git_hash_setting_display(uint8_t subsecond) {
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
-static void git_hash_setting_advance(void) {
+static void git_hash_setting_advance(bool is_editing) {
     return;
 }
 
@@ -391,6 +396,7 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void settings_face_activate(void *context) {
     settings_state_t *state = (settings_state_t *)context;
     state->current_page = 0;
+    state->is_editing = false;
     movement_request_tick_frequency(4); // we need to manually blink some pixels
 }
 
@@ -398,20 +404,27 @@ bool settings_face_loop(movement_event_t event, void *context) {
     settings_state_t *state = (settings_state_t *)context;
 
     switch (event.event_type) {
-        case EVENT_KEYPAD_BUTTON_DOWN:
-            state->current_page = (state->current_page + 1) % state->num_settings;
-            watch_clear_display();
+        case EVENT_MODE_BUTTON_DOWN:
+            if(!state->is_editing ) {
+                if (state->current_page+1 == state->num_settings) {
+                    movement_force_led_off();
+                    movement_move_to_next_face();
+                    return true;
+                } else {
+                    state->current_page = (state->current_page + 1) % state->num_settings;
+                }
+                watch_clear_display();
+            } else {
+                state->settings_screens[state->current_page].advance(state->is_editing);
+            }
             // fall through
         case EVENT_TICK:
         case EVENT_ACTIVATE:
-            state->settings_screens[state->current_page].display(event.subsecond);
+            state->settings_screens[state->current_page].display(event.subsecond, state->is_editing);
             break;
-        case EVENT_MODE_BUTTON_DOWN:
-            movement_force_led_off();
-            movement_move_to_next_face();
-            return true;
         case EVENT_ADJUST_BUTTON_UP:
-            state->settings_screens[state->current_page].advance();
+            state->is_editing = !state->is_editing;
+            button_beep();
             break;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);

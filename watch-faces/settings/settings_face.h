@@ -79,12 +79,13 @@
 #include "movement.h"
 
 typedef struct {
-    void (*display)(uint8_t subsecond);
-    void (*advance)();
+    void (*display)(uint8_t subsecond, bool is_editing);
+    void (*advance)(bool is_editing);
 } settings_screen_t;
 
 typedef struct {
     int8_t current_page;
+    bool is_editing;
     int8_t num_settings;
     int8_t led_color_start;
     int8_t led_color_end;

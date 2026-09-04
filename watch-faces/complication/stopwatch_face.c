@@ -56,7 +56,9 @@ static void _stopwatch_face_update_display(stopwatch_state_t *stopwatch_state, b
         stopwatch_state->running = false;
         movement_cancel_background_task();
         watch_display_text(WATCH_POSITION_TOP, "39");
-        watch_display_text(WATCH_POSITION_BOTTOM, "235959");
+        watch_display_text(WATCH_POSITION_HOURS, "23");
+        watch_display_text(WATCH_POSITION_MINUTES, "59");
+        watch_display_text(WATCH_POSITION_SECONDS, "59");
         return;
     }
 
@@ -64,10 +66,12 @@ static void _stopwatch_face_update_display(stopwatch_state_t *stopwatch_state, b
     char buf[14];
 
     sprintf(buf, "%02d%02d  ", duration.hours, duration.minutes);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf);
+    watch_display_text(WATCH_POSITION_HOURS, buf);
+    watch_display_text(WATCH_POSITION_MINUTES, buf+2);
+    watch_display_text(WATCH_POSITION_SECONDS, buf+4);
 
     if (duration.days != 0) {
-        sprintf(buf, "%2d", (uint8_t)duration.days);
+        sprintf(buf, "%02d", (uint8_t)duration.days);
         watch_display_text(WATCH_POSITION_TOP, buf);
     }
 
@@ -102,8 +106,10 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
             // fall through
         case EVENT_TICK:
             if (stopwatch_state->start_time.reg == 0) {
-                watch_display_text(WATCH_POSITION_TOP, "  ");
-                watch_display_text(WATCH_POSITION_BOTTOM, "000000");
+            watch_display_text(WATCH_POSITION_TOP, "ST");
+                watch_display_text(WATCH_POSITION_HOURS, "00");
+                watch_display_text(WATCH_POSITION_MINUTES, "00");
+                watch_display_text(WATCH_POSITION_SECONDS, "00");
             } else {
                 _stopwatch_face_update_display(stopwatch_state, true);
             }
@@ -113,8 +119,10 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
             if (!stopwatch_state->running) {
                 stopwatch_state->start_time.reg = 0;
                 stopwatch_state->seconds_counted = 0;
-                watch_display_text(WATCH_POSITION_BOTTOM, "000000");
-                watch_display_text(WATCH_POSITION_TOP, "  ");
+                watch_display_text(WATCH_POSITION_TOP, "ST");
+                watch_display_text(WATCH_POSITION_HOURS, "00");
+                watch_display_text(WATCH_POSITION_MINUTES, "00");
+                watch_display_text(WATCH_POSITION_SECONDS, "00");
             }
             break;
         case EVENT_ADJUST_BUTTON_DOWN:
