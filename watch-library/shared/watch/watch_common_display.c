@@ -33,7 +33,7 @@ uint8_t IndicatorSegments[10] = {
     SLCD_SEGID(0, 0), // WATCH_INDICATOR_SIGNAL
     SLCD_SEGID(1, 0), // WATCH_INDICATOR_BELL
     SLCD_SEGID(2, 4), // WATCH_INDICATOR_PM
-    SLCD_SEGID(2, 1), // WATCH_INDICATOR_AM
+    SLCD_SEGID(2, 8), // WATCH_INDICATOR_AM
 
     SLCD_SEGID(2, 0), // WATCH_INDICATOR_K
     SLCD_SEGID(2, 30), // WATCH_INDICATOR_DIVIDE
@@ -41,7 +41,7 @@ uint8_t IndicatorSegments[10] = {
     SLCD_SEGID(2, 13), // WATCH_INDICATOR_MINUS
     SLCD_SEGID(2, 16), // WATCH_INDICATOR_PLUS
 
-    SLCD_SEGID(1, 8), // WATCH_INDICATOR_COLON
+    SLCD_SEGID(1, 1), // WATCH_INDICATOR_COLON
 };
 
 uint8_t watch_get_weekday_character(uint8_t character, uint8_t position) {
@@ -243,11 +243,11 @@ void watch_display_float_with_best_effort(float value, const char *units) {
 }
 
 void watch_set_colon(void) {
-    watch_set_pixel(1, 8);
+    watch_set_pixel(1, 1);
 }
 
 void watch_clear_colon(void) {
-    watch_clear_pixel(1, 8);
+    watch_clear_pixel(1, 1);
 }
 
 void watch_set_indicator(watch_indicator_t indicator) {

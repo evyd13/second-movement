@@ -307,8 +307,8 @@ static const calculator_digit_mapping_t Calculator_Digits_LCD_Mapping[] = {
             { .address = { .com = 2, .seg = 3 } }, // B
             { .address = { .com = 1, .seg = 3 } }, // C
             { .address = { .com = 0, .seg = 2 } }, // D
-            { .address = { .com = 0, .seg = 1 } }, // E
-            { .address = { .com = 1, .seg = 1 } }, // F
+            { .address = { .com = 0, .seg = 8 } }, // E
+            { .address = { .com = 1, .seg = 8 } }, // F
             { .address = { .com = 1, .seg = 2 } }, // G
             { .address = { .com = 0, .seg = 3 } }, // DOT
         },
@@ -331,10 +331,10 @@ static const calculator_digit_mapping_t Calculator_Digits_LCD_Mapping[] = {
             { .address = { .com = 1, .seg = 30 } }, // A
             { .address = { .com = 2, .seg = 9 } }, // B
             { .address = { .com = 1, .seg = 9 } }, // C
-            { .address = { .com = 0, .seg = 8 } }, // D
+            { .address = { .com = 0, .seg = 1 } }, // D
             { .address = { .com = 1, .seg = 7 } }, // E
             { .address = { .com = 2, .seg = 7 } }, // F
-            { .address = { .com = 2, .seg = 8 } }, // G
+            { .address = { .com = 2, .seg = 1 } }, // G
             { .address = { .com = 0, .seg = 9 } }, // DOT
         },
     },
