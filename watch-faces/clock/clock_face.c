@@ -42,6 +42,8 @@
 #define CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD 2400
 #endif
 
+// TODOEEF: short press adjust should toggle hourly chime
+
 bool clock_face_should_show_alternate_screen(clock_state_t *state) {
     return state->show_alternate_screen;
 }

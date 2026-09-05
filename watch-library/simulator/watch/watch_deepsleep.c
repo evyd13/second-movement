@@ -86,7 +86,6 @@ void watch_enter_sleep_mode(void) {
     watch_register_interrupt_callback(HAL_GPIO_KPD_R2_pin(), NULL, INTERRUPT_TRIGGER_NONE);
     watch_register_interrupt_callback(HAL_GPIO_KPD_R3_pin(), NULL, INTERRUPT_TRIGGER_NONE);
     watch_register_interrupt_callback(HAL_GPIO_BTN_ADJUST_pin(), NULL, INTERRUPT_TRIGGER_NONE);
-    // TODOEEF: call watch_keypad function to disable keypad 
 
     sleep(4);
 

@@ -84,9 +84,9 @@ static const uint16_t weekday_character_set[] =
     0b0000000001101111, // 9
     0b0000000000001001, // : (unused)
     0b0000000000001101, // ; (unused)
-    0b0000000001100001, // <
+    0b0000000001100001, // < // TODOEEF: LAGER
     0b0000000001001000, // =
-    0b0000000001000011, // >
+    0b0000000001000011, // > // TODOEEF: LAGER
     0b0000000001010011, // ?
     0b1111111111111111, // @ (all segments on)
     0b0000000001110111, // A
@@ -102,7 +102,7 @@ static const uint16_t weekday_character_set[] =
     0b0000000001110101, // K
     0b0000000000111000, // L
     0b0000001100110111, // M (special for weekday)
-    0b0000000000110111, // N
+    0b0000000000110111, // N // TODOEEF: make it complete
     0b0000000000111111, // O
     0b0000000001110011, // P
     0b0000000001100111, // Q
@@ -133,7 +133,7 @@ static const uint16_t weekday_character_set[] =
     0b0000000000011110, // j
     0b0000000001110101, // k
     0b0000000000111000, // l
-    0b0000000000010101, // m
+    0b0000000000010101, // m // TODOEEF: make it complete
     0b0000000000110111, // n
     0b0000000000111111, // o
     0b0000000001110011, // p
@@ -150,7 +150,7 @@ static const uint16_t weekday_character_set[] =
     0b0000000000010110, // { (open brace doesn't really work; overriden to represent the two character ligature "il")
     0b0000000000110110, // | (overriden to represent the two character ligature "ll")
     0b0000000000110100, // } (overriden to represent the two character ligature "li")
-    0b0000000001000000, // ~
+    0b0000000001000000, // ~  // TODOEEF: HIGHER
 };
 
 static const uint8_t calculator_character_set[] =
@@ -185,9 +185,9 @@ static const uint8_t calculator_character_set[] =
     0b01101111, // 9
     0b00001001, // : (unused)
     0b00001101, // ; (unused)
-    0b01100001, // <
+    0b01100001, // < // TODOEEF: LAGER
     0b01001000, // =
-    0b01000011, // >
+    0b01000011, // > // TODOEEF: LAGER
     0b11010011, // ?
     0b11111111, // @ (all segments on)
     0b01011111, // A
@@ -202,7 +202,7 @@ static const uint8_t calculator_character_set[] =
     0b00011110, // J
     0b01110101, // K
     0b00111000, // L
-    0b00010101, // M
+    0b00010101, // M // TODOEEF: make it complete
     0b00110111, // N
     0b00111111, // O
     0b01110011, // P
@@ -234,7 +234,7 @@ static const uint8_t calculator_character_set[] =
     0b00001100, // j 
     0b01110101, // k
     0b00110000, // l
-    0b00010100, // m
+    0b00010100, // m // TODOEEF: make it complete
     0b01010100, // n
     0b01011100, // o
     0b01110011, // p
@@ -251,7 +251,7 @@ static const uint8_t calculator_character_set[] =
     0b00010110, // { (open brace doesn't really work; overriden to represent the two character ligature "il")
     0b00110110, // | (overriden to represent the two character ligature "ll")
     0b00110100, // } (overriden to represent the two character ligature "li")
-    0b01000000, // ~
+    0b01000000, // ~  // TODOEEF: HIGHER
 };
 
 static const weekday_digit_mapping_t Weekday_Digits_LCD_Mapping[] = {
@@ -298,7 +298,6 @@ static const weekday_digit_mapping_t Weekday_Digits_LCD_Mapping[] = {
     },
 };
 
-//TODOEEF: swap seg08 (colon) and seg01 so that the colon can blink
 static const calculator_digit_mapping_t Calculator_Digits_LCD_Mapping[] = {
     // Positions 2 and 3 are the hour digits
     {

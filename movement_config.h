@@ -29,18 +29,18 @@
 
 const watch_face_t watch_faces[] = {
     clock_face,
-    calculator_face,
-    alarm_face, // required to enable alarm and time signal, simulating OEM functionality.
+    calculator_face, // TODOEEF: MAKE THIS WORK!
+    alarm_face,
     world_clock_face,
     stopwatch_face,
+    // countdown_face,
+    // sunrise_sunset_face,
+    // moon_phase_face,
 
     temperature_display_face,
     voltage_face,
     settings_face,
     set_time_face,
-    // finetune_face,
-    // nanosec_face,
-    // all_segments_face,
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))

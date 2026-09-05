@@ -1,8 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Wesley Ellis
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2025 Daniel Bergman
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,40 +22,36 @@
  * SOFTWARE.
  */
 
-#ifndef STOPWATCH_FACE_H_
-#define STOPWATCH_FACE_H_
-
-/*
- * STOPWATCH FACE
- *
- * The Stopwatch face provides basic stopwatch functionality: you can start
- * and stop the stopwatch with the alarm button. Pressing the light button
- * when the timer is stopped resets it.
- *
- * This face does not count sub-seconds.
- * See also: "fast_stopwatch_face.h"
- */
+#pragma once
 
 #include "movement.h"
 
+/*
+ * ISH FACE: A deliberately vague watch face that displays approximate time with 
+ * three configurable vagueness levels. Perfect for vacation mode when precise time isn't needed.
+ *
+ * Vagueness levels:
+ *   1: Hour (e.g., "09" or "14") - switches at the 30-minute mark
+ *   2: Half Hour (e.g., "13:3o", "14:0o") - switches at the 15-minute mark, o instead of 0 to signify vagueness
+ *   3: Quarter (e.g., "13:45") - rounds to nearest quarter hour
+ *
+ * Press ALARM to cycle levels. We honor the 24h clock mode setting but don't show the AM/PM indicator.
+ */
+
 typedef struct {
-    bool running;
-    watch_date_time_t start_time; // while running, show the difference between this time and now
-    uint32_t seconds_counted;   // set this value when paused, and show that instead.
-    bool show_alternate_screen;
-} stopwatch_state_t;
+    uint8_t vagueness_level; // 1=hour, 2=half hour, 3=quarter
+    uint8_t last_displayed_minute; // Last minute when we updated the display
+} ish_face_state_t;
 
-void stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void stopwatch_face_activate(void *context);
-bool stopwatch_face_loop(movement_event_t event, void *context);
-void stopwatch_face_resign(void *context);
+void ish_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void ish_face_activate(void *context);
+bool ish_face_loop(movement_event_t event, void *context);
+void ish_face_resign(void *context);
 
-#define stopwatch_face ((const watch_face_t){ \
-    stopwatch_face_setup, \
-    stopwatch_face_activate, \
-    stopwatch_face_loop, \
-    stopwatch_face_resign, \
+#define ish_face ((const watch_face_t){ \
+    ish_face_setup, \
+    ish_face_activate, \
+    ish_face_loop, \
+    ish_face_resign, \
     NULL, \
 })
-
-#endif // STOPWATCH_FACE_H_

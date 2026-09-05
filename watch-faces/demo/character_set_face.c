@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Joey Castillo
+ * Copyright (c) 2022 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,34 +24,44 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "all_segments_face.h"
+#include "character_set_face.h"
 #include "watch.h"
+#include "watch_common_display.h"
 
-void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+void character_set_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    (void) context_ptr;
+    if (*context_ptr == NULL) *context_ptr = malloc(sizeof(char));
 }
 
-void all_segments_face_activate(void *context) {
-    (void) context;
-    uint8_t num_com = 3;
-    uint8_t num_seg = 34 - num_com;
+void character_set_face_activate(void *context) {
+    char *c = (char *)context;
+    *c = '@';
+    movement_request_tick_frequency(0);
+}
 
-    for (int com = 0; com < num_com; com++) {
-        for (int seg = 0; seg < num_seg; seg++) {
-            watch_set_pixel(com, seg);
-        }
+bool character_set_face_loop(movement_event_t event, void *context) {
+    char *c = (char *)context;
+    char buf[11];
+    switch (event.event_type) {
+        case EVENT_KEYPAD_BUTTON_DOWN:
+            *c = (*c) + 1;
+            if (*c & 0x80) *c = ' ';
+            // fall through
+        case EVENT_ACTIVATE:
+            sprintf(buf, "%c%c%c%c%c%c%c%c%c%c", *c, *c, *c, *c, *c, *c, *c, *c, *c, *c);
+            watch_display_text(WATCH_POSITION_FULL, buf);
+            break;
+        case EVENT_TIMEOUT:
+            movement_move_to_face(0);
+            break;
+        default:
+            movement_default_loop_handler(event);
+            break;
     }
-}
-
-bool all_segments_face_loop(movement_event_t event, void *context) {
-    (void) context;
-
-    movement_default_loop_handler(event);
 
     return true;
 }
 
-void all_segments_face_resign(void *context) {
+void character_set_face_resign(void *context) {
     (void) context;
 }

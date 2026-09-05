@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Joey Castillo
+ * Copyright (c) 2025 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,36 +22,36 @@
  * SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include "all_segments_face.h"
-#include "watch.h"
+#pragma once
 
-void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
-    (void) watch_face_index;
-    (void) context_ptr;
-}
+#include "movement.h"
 
-void all_segments_face_activate(void *context) {
-    (void) context;
-    uint8_t num_com = 3;
-    uint8_t num_seg = 34 - num_com;
+/*
+ * Kè (Decimal Time)
+ *
+ * This watch face is an optional replacement for the standard Clock face.
+ * Like the standard Clock face, it displays the time and weekday at the top,
+ * but the main line shows the percentage of the day that has passed, with midnight
+ * represented by 0% and 11:59 PM as 99.9%.
+ *
+ * Name comes from here: https://en.wikipedia.org/wiki/Traditional_Chinese_timekeeping#One-hundredth_of_a_day:_kè
+ *
+ */
 
-    for (int com = 0; com < num_com; com++) {
-        for (int seg = 0; seg < num_seg; seg++) {
-            watch_set_pixel(com, seg);
-        }
-    }
-}
+typedef struct {
+    uint8_t previous_day;
+    uint32_t previous_time;
+} ke_decimal_time_state_t;
 
-bool all_segments_face_loop(movement_event_t event, void *context) {
-    (void) context;
+void ke_decimal_time_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void ke_decimal_time_face_activate(void *context);
+bool ke_decimal_time_face_loop(movement_event_t event, void *context);
+void ke_decimal_time_face_resign(void *context);
 
-    movement_default_loop_handler(event);
-
-    return true;
-}
-
-void all_segments_face_resign(void *context) {
-    (void) context;
-}
+#define ke_decimal_time_face ((const watch_face_t){ \
+    ke_decimal_time_face_setup, \
+    ke_decimal_time_face_activate, \
+    ke_decimal_time_face_loop, \
+    ke_decimal_time_face_resign, \
+    NULL, \
+})

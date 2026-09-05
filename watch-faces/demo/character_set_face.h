@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Joey Castillo
+ * Copyright (c) 2022 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,36 +22,33 @@
  * SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include "all_segments_face.h"
-#include "watch.h"
+#ifndef CHARACTER_SET_FACE_H_
+#define CHARACTER_SET_FACE_H_
 
-void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
-    (void) watch_face_index;
-    (void) context_ptr;
-}
+/*
+ * CHARACTER SET FACE
+ *
+ * This watch face displays all of the characters in the Sensor Watch character
+ * set. You can advance from one character to the next with a short press of the
+ * ALARM button.
+ *
+ * This watch face may be useful to watch face developers, in that it can help
+ * them to understand which characters will work in different positions.
+ */
 
-void all_segments_face_activate(void *context) {
-    (void) context;
-    uint8_t num_com = 3;
-    uint8_t num_seg = 34 - num_com;
+#include "movement.h"
 
-    for (int com = 0; com < num_com; com++) {
-        for (int seg = 0; seg < num_seg; seg++) {
-            watch_set_pixel(com, seg);
-        }
-    }
-}
+void character_set_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void character_set_face_activate(void *context);
+bool character_set_face_loop(movement_event_t event, void *context);
+void character_set_face_resign(void *context);
 
-bool all_segments_face_loop(movement_event_t event, void *context) {
-    (void) context;
+#define character_set_face ((const watch_face_t){ \
+    character_set_face_setup, \
+    character_set_face_activate, \
+    character_set_face_loop, \
+    character_set_face_resign, \
+    NULL, \
+})
 
-    movement_default_loop_handler(event);
-
-    return true;
-}
-
-void all_segments_face_resign(void *context) {
-    (void) context;
-}
+#endif // CHARACTER_SET_FACE_H_

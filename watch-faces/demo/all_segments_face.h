@@ -32,15 +32,6 @@
 
 #include "movement.h"
 
-typedef enum {
-    ALL_SEGMENTS_FACE_MODE_ALL = 0,
-    ALL_SEGMENTS_FACE_MODE_NAME,
-} all_segments_face_setting_mode_t;
-
-typedef struct {
-    all_segments_face_setting_mode_t face_mode : 1;
-} all_segments_face_state_t;
-
 void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void all_segments_face_activate(void *context);
 bool all_segments_face_loop(movement_event_t event, void *context);

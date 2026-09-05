@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Joey Castillo
+ * Copyright (c) 2022 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,36 +22,39 @@
  * SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include "all_segments_face.h"
-#include "watch.h"
+#pragma once
 
-void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
-    (void) watch_face_index;
-    (void) context_ptr;
-}
+/*
+ * PEEK FACE
+ *
+ * This watch face displays a location in memory in a given format.
+ * Currently hard coded but would be cool to let user select it somehow.
+ *
+ * Only works with custom LCD. This is for debugging purposes only.
+ */
 
-void all_segments_face_activate(void *context) {
-    (void) context;
-    uint8_t num_com = 3;
-    uint8_t num_seg = 34 - num_com;
+#include "movement.h"
 
-    for (int com = 0; com < num_com; com++) {
-        for (int seg = 0; seg < num_seg; seg++) {
-            watch_set_pixel(com, seg);
-        }
-    }
-}
+/// TODO: more formats, signed and unsigned decimal, etc.
+typedef enum {
+    PEEK_MEMORY_FORMAT_HEX = 0,
+    PEEK_MEMORY_FORMAT_DATE
+} peek_memory_format_t;
 
-bool all_segments_face_loop(movement_event_t event, void *context) {
-    (void) context;
+typedef struct {
+    uint8_t format;
+    void *location;
+} peek_memory_state_t;
 
-    movement_default_loop_handler(event);
+void peek_memory_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void peek_memory_face_activate(void *context);
+bool peek_memory_face_loop(movement_event_t event, void *context);
+void peek_memory_face_resign(void *context);
 
-    return true;
-}
-
-void all_segments_face_resign(void *context) {
-    (void) context;
-}
+#define peek_memory_face ((const watch_face_t){ \
+    peek_memory_face_setup, \
+    peek_memory_face_activate, \
+    peek_memory_face_loop, \
+    peek_memory_face_resign, \
+    NULL, \
+})

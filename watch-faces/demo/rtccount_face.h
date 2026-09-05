@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Joey Castillo
+ * Copyright (c) 2025 Alessandro Genova
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,36 +22,26 @@
  * SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include "all_segments_face.h"
-#include "watch.h"
+#pragma once
 
-void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
-    (void) watch_face_index;
-    (void) context_ptr;
-}
+/*
+ * RTCCOUNT FACE
+ * 
+ * A test face to inspect some metrics of the rtc-counter32 mode.
+ */
 
-void all_segments_face_activate(void *context) {
-    (void) context;
-    uint8_t num_com = 3;
-    uint8_t num_seg = 34 - num_com;
+#include "movement.h"
 
-    for (int com = 0; com < num_com; com++) {
-        for (int seg = 0; seg < num_seg; seg++) {
-            watch_set_pixel(com, seg);
-        }
-    }
-}
+void rtccount_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void rtccount_face_activate(void *context);
+bool rtccount_face_loop(movement_event_t event, void *context);
+void rtccount_face_resign(void *context);
+movement_watch_face_advisory_t rtccount_face_advise(void *context);
 
-bool all_segments_face_loop(movement_event_t event, void *context) {
-    (void) context;
-
-    movement_default_loop_handler(event);
-
-    return true;
-}
-
-void all_segments_face_resign(void *context) {
-    (void) context;
-}
+#define rtccount_face ((const watch_face_t){ \
+    rtccount_face_setup, \
+    rtccount_face_activate, \
+    rtccount_face_loop, \
+    rtccount_face_resign, \
+    rtccount_face_advise, \
+})

@@ -22,36 +22,33 @@
  * SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include "all_segments_face.h"
-#include "watch.h"
+#pragma once
 
-void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
-    (void) watch_face_index;
-    (void) context_ptr;
-}
+#include "movement.h"
 
-void all_segments_face_activate(void *context) {
-    (void) context;
-    uint8_t num_com = 3;
-    uint8_t num_seg = 34 - num_com;
+#ifdef HAS_IR_SENSOR
 
-    for (int com = 0; com < num_com; com++) {
-        for (int seg = 0; seg < num_seg; seg++) {
-            watch_set_pixel(com, seg);
-        }
-    }
-}
+/*
+ * LIGHT SENSOR PLAYGROUND
+ *
+ * Temporary watch face for playing with the light sensor.
+ * WARNING: This watch face may not play nicely with watch faces that use the ADC in the background,
+ * such as the temperature logger. More improvement and testing needs to be done before this is can
+ * be considered a production-ready watch face.
+ *
+ */
 
-bool all_segments_face_loop(movement_event_t event, void *context) {
-    (void) context;
+void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void light_sensor_face_activate(void *context);
+bool light_sensor_face_loop(movement_event_t event, void *context);
+void light_sensor_face_resign(void *context);
 
-    movement_default_loop_handler(event);
+#define light_sensor_face ((const watch_face_t){ \
+    light_sensor_face_setup, \
+    light_sensor_face_activate, \
+    light_sensor_face_loop, \
+    light_sensor_face_resign, \
+    NULL, \
+})
 
-    return true;
-}
-
-void all_segments_face_resign(void *context) {
-    (void) context;
-}
+#endif // HAS_IR_SENSOR
