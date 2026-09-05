@@ -422,6 +422,6 @@ uint8_t movement_get_key_pressed(void);
 void watch_keypad_register_interrupts(void);
 void watch_keypad_setup_column_pins_out(bool level);
 void watch_keypad_setup_column_pins_in(bool level);
-movement_keypad_key_t movement_scan_matrix(void);
+void movement_scan_matrix(void);
 bool movement_is_number_pressed(void);
 uint8_t movement_get_keypad_number_pressed(void);

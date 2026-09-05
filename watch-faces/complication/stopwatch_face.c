@@ -115,42 +115,44 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_KEYPAD_BUTTON_DOWN:
-            movement_illuminate_led();
-            if (!stopwatch_state->running) {
+            if (movement_get_key_pressed() == MOVEMENT_BACKLIGHT_KEY) movement_illuminate_led();
+            if (movement_get_key_pressed() == KEYPAD_KEY_K0 && !stopwatch_state->running) {
+                if (movement_button_should_sound()) {
+                    watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
+                }
                 stopwatch_state->start_time.reg = 0;
                 stopwatch_state->seconds_counted = 0;
                 watch_display_text(WATCH_POSITION_TOP, "ST");
                 watch_display_text(WATCH_POSITION_HOURS, "00");
                 watch_display_text(WATCH_POSITION_MINUTES, "00");
                 watch_display_text(WATCH_POSITION_SECONDS, "00");
-            }
-            break;
-        case EVENT_ADJUST_BUTTON_DOWN:
-            if (movement_button_should_sound()) {
-                watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
-            }
-            stopwatch_state->running = !stopwatch_state->running;
-            if (stopwatch_state->running) {
-                // we're running now, so we need to set the start_time.
-                if (stopwatch_state->start_time.reg == 0) {
-                    // if starting from the reset state, easy: we start now.
-                    stopwatch_state->start_time = watch_rtc_get_date_time();
-                } else {
-                    // if resuming with time already on the clock, the original start time isn't valid anymore!
-                    // so let's fetch the current time...
-                    uint32_t timestamp = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
-                    // ...subtract the seconds we've already counted...
-                    timestamp -= stopwatch_state->seconds_counted;
-                    // and resume from the "virtual" start time that's that many seconds ago.
-                    stopwatch_state->start_time = watch_utility_date_time_from_unix_time(timestamp, 0);
+            } else if (movement_get_key_pressed() == KEYPAD_KEY_PLUS) {
+                if (movement_button_should_sound()) {
+                    watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
                 }
-                // schedule our keepalive task when running...
-                movement_schedule_background_task(distant_future);
-            } else {
-                // and cancel it when stopped.
-                movement_cancel_background_task();
+                stopwatch_state->running = !stopwatch_state->running;
+                if (stopwatch_state->running) {
+                    // we're running now, so we need to set the start_time.
+                    if (stopwatch_state->start_time.reg == 0) {
+                        // if starting from the reset state, easy: we start now.
+                        stopwatch_state->start_time = watch_rtc_get_date_time();
+                    } else {
+                        // if resuming with time already on the clock, the original start time isn't valid anymore!
+                        // so let's fetch the current time...
+                        uint32_t timestamp = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
+                        // ...subtract the seconds we've already counted...
+                        timestamp -= stopwatch_state->seconds_counted;
+                        // and resume from the "virtual" start time that's that many seconds ago.
+                        stopwatch_state->start_time = watch_utility_date_time_from_unix_time(timestamp, 0);
+                    }
+                    // schedule our keepalive task when running...
+                    movement_schedule_background_task(distant_future);
+                } else {
+                    // and cancel it when stopped.
+                    movement_cancel_background_task();
+                }
+                break;
             }
-            break;
         case EVENT_TIMEOUT:
             // explicitly ignore the timeout event so we stay on screen
             break;
@@ -160,7 +162,9 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
                 // since the tick animation is running, displaying the stopped time could be misleading,
                 // as it could imply that the stopwatch is running. instead, show a blank display to
                 // indicate that we are in sleep mode.
-                watch_display_text(WATCH_POSITION_BOTTOM, "----  ");
+                watch_display_text(WATCH_POSITION_HOURS, "--");
+                watch_display_text(WATCH_POSITION_MINUTES, "--");
+                watch_display_text(WATCH_POSITION_SECONDS, "  ");
             } else {
                 // this OTOH shouldn't happen anymore; if we're running, we shouldn't enter low energy mode
                 _stopwatch_face_update_display(stopwatch_state, false);

@@ -404,8 +404,12 @@ bool settings_face_loop(movement_event_t event, void *context) {
     settings_state_t *state = (settings_state_t *)context;
 
     switch (event.event_type) {
+        case EVENT_MODE_LONG_PRESS:
+            movement_force_led_off();
+            movement_move_to_next_face();
+            return true;
         case EVENT_MODE_BUTTON_DOWN:
-            if(!state->is_editing ) {
+            if (!state->is_editing) {
                 if (state->current_page+1 == state->num_settings) {
                     movement_force_led_off();
                     movement_move_to_next_face();

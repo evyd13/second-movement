@@ -524,7 +524,7 @@ void watch_keypad_setup_column_pins_in(bool level) {
     }
 }
 
-movement_keypad_key_t movement_scan_matrix(void) {
+void movement_scan_matrix(void) {
     movement_volatile_state.keypad_is_scanning = true;
     movement_keypad_row_t active_row = movement_volatile_state.keypad_active_row;
     movement_keypad_col_t active_col = KEYPAD_COL_NONE;

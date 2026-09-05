@@ -152,7 +152,7 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
                 }
             }
             break;
-        case EVENT_ADJUST_BUTTON_DOWN:
+        case EVENT_ADJUST_BUTTON_UP:
             movement_request_tick_frequency(4);
             state->current_screen = 1;
             break;
@@ -212,7 +212,7 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
                 button_beep();
             }
             break;
-        case EVENT_ADJUST_BUTTON_DOWN:
+        case EVENT_ADJUST_BUTTON_UP:
             state->current_screen++;
             if (state->current_screen > 1) {
                 movement_request_tick_frequency(1);
@@ -244,7 +244,7 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
     sprintf(buf, "%s  ", watch_utility_time_zone_name_at_index(state->settings.bit.timezone_index));
 
     // blink up the parameter we're setting
-    if (event.subsecond % 2) {
+    if (event.subsecond % 2 == 0) {
         switch (state->current_screen) {
             case 1:
                 memcpy(buf, "        ", 8);

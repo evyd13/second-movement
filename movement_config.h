@@ -37,10 +37,10 @@ const watch_face_t watch_faces[] = {
     // sunrise_sunset_face,
     // moon_phase_face,
 
+    set_time_face,
+    settings_face,
     temperature_display_face,
     voltage_face,
-    settings_face,
-    set_time_face,
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
