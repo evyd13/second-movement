@@ -152,7 +152,7 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
                 }
             }
             break;
-        case EVENT_ADJUST_BUTTON_UP:
+        case EVENT_ADJUST_BUTTON_DOWN:
             movement_request_tick_frequency(4);
             state->current_screen = 1;
             break;
@@ -202,9 +202,22 @@ static bool world_clock_face_do_date_mode(movement_event_t event, world_clock_st
 static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clock_state_t *state) {
 
     switch (event.event_type) {
+        case EVENT_KEYPAD_BUTTON_DOWN:
+            if (!(movement_get_key_pressed() == KEYPAD_KEY_MINUS || movement_get_key_pressed() == KEYPAD_KEY_PLUS)) {
+                break;
+            }
         case EVENT_MODE_BUTTON_DOWN:
-            if (state->current_screen == 1) {
+            if ((movement_get_key_pressed() == KEYPAD_KEY_MINUS)) {
+                if (state->settings.bit.timezone_index > 0) {
+                    state->settings.bit.timezone_index--;
+                } else {
+                    state->settings.bit.timezone_index = NUM_ZONE_NAMES-1;
+                }
+            } else {
                 state->settings.bit.timezone_index++;
+            }
+
+            if (state->current_screen == 1) {
                 if (state->settings.bit.timezone_index >= NUM_ZONE_NAMES) state->settings.bit.timezone_index = 0;
                 char buf[3];
                 sprintf(buf, "%02d", state->settings.bit.timezone_index+1);
@@ -212,7 +225,7 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
                 button_beep();
             }
             break;
-        case EVENT_ADJUST_BUTTON_UP:
+        case EVENT_ADJUST_BUTTON_DOWN:
             state->current_screen++;
             if (state->current_screen > 1) {
                 movement_request_tick_frequency(1);
@@ -225,6 +238,9 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
             }
             button_beep();
             break;
+        case EVENT_ADJUST_REALLY_LONG_PRESS:
+            return movement_default_loop_handler(event);
+            
         case EVENT_TIMEOUT:
             persist_world_clock_settings(state);
             movement_move_to_face(0);
@@ -269,15 +285,19 @@ bool world_clock_face_loop(movement_event_t event, void *context) {
                         watch_clear_display();
                         event.event_type = EVENT_ACTIVATE;
                         return world_clock_face_do_date_mode(event, state);
+                    break;
                 }
-                break;
             case EVENT_KEYPAD_BUTTON_UP:
             case EVENT_KEYPAD_LONG_UP:
-                world_clock_face_set_alternate_screen(state, false);
-                watch_clear_display();
-                event.event_type = EVENT_ACTIVATE;
-                return world_clock_face_do_display_mode(event, state);
-                break;
+                if (world_clock_face_should_show_alternate_screen(state)) {
+                    world_clock_face_set_alternate_screen(state, false);
+                    watch_clear_display();
+                    event.event_type = EVENT_ACTIVATE;
+                    return world_clock_face_do_display_mode(event, state);
+                    break;
+                }
+            default:
+                movement_default_loop_handler(event);
         }
         if (world_clock_face_should_show_alternate_screen(state)) {
             return world_clock_face_do_date_mode(event, state);

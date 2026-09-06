@@ -288,13 +288,6 @@ bool clock_face_loop(movement_event_t event, void *context) {
             state->date_time.previous = current;
 
             break;
-        case EVENT_KEYPAD_BUTTON_UP:
-        case EVENT_KEYPAD_LONG_UP:
-            current = movement_get_local_date_time();
-            clock_face_set_should_redraw_screen(state, true);
-            clock_face_set_alternate_screen(state, false);
-            clock_display_clock(state, current);
-            break;
         case EVENT_BACKGROUND_TASK:
             // uncomment this line to snap back to the clock face when the hour signal sounds:
             // movement_move_to_face(state->watch_face_index);
@@ -306,8 +299,19 @@ bool clock_face_loop(movement_event_t event, void *context) {
                 clock_face_set_should_redraw_screen(state, true);
                 clock_face_set_alternate_screen(state, true);
                 clock_display_date(state, current);
-            break;
+                break;
             }
+            // fall through
+        case EVENT_KEYPAD_BUTTON_UP:
+        case EVENT_KEYPAD_LONG_UP:
+            if (clock_face_should_show_alternate_screen(state)) {
+                current = movement_get_local_date_time();
+                clock_face_set_should_redraw_screen(state, true);
+                clock_face_set_alternate_screen(state, false);
+                clock_display_clock(state, current);
+                break;
+            }
+            // fall through
         default:
             return movement_default_loop_handler(event);
     }

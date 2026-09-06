@@ -64,15 +64,20 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
                 alternate_screen = true;
                 movement_set_use_imperial_units(!movement_use_imperial_units());
                 _temperature_display_face_update_display(movement_use_imperial_units());
+                break;
             }
-            break;
+            //fall through
         case EVENT_KEYPAD_BUTTON_UP:
         case EVENT_KEYPAD_LONG_UP:
             if (alternate_screen) {
                 alternate_screen = false;
                 movement_set_use_imperial_units(!movement_use_imperial_units());
                 _temperature_display_face_update_display(movement_use_imperial_units());
+                break;
             }
+            //fall through
+        default:
+            movement_default_loop_handler(event);
             break;
         case EVENT_ACTIVATE:
             if (skip) {
@@ -106,8 +111,10 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
                 _temperature_display_face_update_display(movement_use_imperial_units());
             }
             break;
-        default:
-            movement_default_loop_handler(event);
+        case EVENT_TIMEOUT:
+            // Your watch face will receive this event after a period of inactivity. If it makes sense to resign,
+            // you may uncomment this line to move back to the first watch face in the list:
+            movement_move_to_face(0);
             break;
     }
 

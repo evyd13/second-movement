@@ -146,19 +146,21 @@ bool mars_time_face_loop(movement_event_t event, void *context) {
             }
             _update(state, true);
             break;
-        case EVENT_KEYPAD_LONG_UP:
-        case EVENT_KEYPAD_BUTTON_UP:
-            if (state->displaying_sol) {
-                state->displaying_sol = false;
-                _update(state, false);
-            }
-            break;
         case EVENT_KEYPAD_BUTTON_DOWN:
             if (movement_get_key_pressed() == KEYPAD_KEY_DIVIDE) {
                 state->displaying_sol = true;
                 _update(state, false);
                 break;
             }
+            // fall through
+        case EVENT_KEYPAD_LONG_UP:
+        case EVENT_KEYPAD_BUTTON_UP:
+            if (state->displaying_sol) {
+                state->displaying_sol = false;
+                _update(state, false);
+                break;
+            }
+            // fall through
         default:
             movement_default_loop_handler(event);
             break;

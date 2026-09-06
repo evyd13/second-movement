@@ -283,21 +283,25 @@ bool close_enough_face_loop(movement_event_t event, void *context) {
                 close_enough_face_display_time(state, date_time);
             }
             break;
-        case EVENT_KEYPAD_BUTTON_UP:
-        case EVENT_KEYPAD_LONG_UP:
-            date_time = movement_get_local_date_time();
-            close_enough_face_set_should_redraw_screen(state, true);
-            close_enough_face_set_alternate_screen(state, false);
-            close_enough_face_display_time(state, date_time);
-            break;
         case EVENT_KEYPAD_BUTTON_DOWN:
             if (movement_get_key_pressed() == KEYPAD_KEY_DIVIDE) {
                 date_time = movement_get_local_date_time();
                 close_enough_face_set_should_redraw_screen(state, true);
                 close_enough_face_set_alternate_screen(state, true);
                 close_enough_face_display_date(state, date_time);
-            break;
+                break;
             }
+            // fall through
+        case EVENT_KEYPAD_BUTTON_UP:
+        case EVENT_KEYPAD_LONG_UP:
+            if (close_enough_face_should_show_alternate_screen(state)) {
+                date_time = movement_get_local_date_time();
+                close_enough_face_set_should_redraw_screen(state, true);
+                close_enough_face_set_alternate_screen(state, false);
+                close_enough_face_display_time(state, date_time);
+                break;
+            }
+            // fall through
         default:
             return movement_default_loop_handler(event);
     }

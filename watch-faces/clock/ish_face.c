@@ -182,6 +182,7 @@ bool ish_face_loop(movement_event_t event, void *context) {
                 ish_face_update_display(state, date_time);
                 break;
             }
+            // fall through
         }
         default:
             // Use default handler for all other events

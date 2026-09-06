@@ -24,7 +24,7 @@
  */
 
 #define MOVEMENT_LONG_PRESS_TICKS 64
-#define MOVEMENT_REALLY_LONG_PRESS_TICKS 96
+#define MOVEMENT_REALLY_LONG_PRESS_TICKS 128
 #define MOVEMENT_MAX_LONG_PRESS_TICKS 1280 // get a chance to check if a button held down over 10 seconds is a glitch
 
 #include <stdio.h>
