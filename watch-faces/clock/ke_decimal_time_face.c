@@ -27,7 +27,7 @@
 #include "ke_decimal_time_face.h"
 #include "watch_utility.h"
 #include "watch_common_display.h"
-// TODOEEF: implement divide key date view, bell/alarm icons
+
 static void _display_date(ke_decimal_time_state_t *state, watch_date_time_t date_time, bool low_energy) {
 
 }

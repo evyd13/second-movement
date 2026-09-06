@@ -155,7 +155,6 @@ static const uint16_t weekday_character_set[] =
 
 static const uint8_t calculator_character_set[] =
 {
-// TODOEEF: find a way to apply a dot to any character for calculator, OR?
 //  0b.GFEDCBA
     0b00000000, // [space]
     0b10000110, // !

@@ -29,10 +29,10 @@
 
 const watch_face_t watch_faces[] = {
     clock_face,
-    calculator_face, // TODOEEF: MAKE THIS WORK!
+    calculator_face,
     alarm_face,
     world_clock_face,
-    stopwatch_face,
+    stopwatch_face, // should be fast_stopwatch_face!
     // countdown_face,
     // sunrise_sunset_face,
     // moon_phase_face,

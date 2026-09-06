@@ -100,7 +100,6 @@ static EM_BOOL watch_invoke_key_callback(int eventType, const EmscriptenKeyboard
 
     uint8_t button_id;
     const char *key = keyEvent->key;
-    // TODOEEF: assign keyboard keys
     if (key[1] == 0) {
         // event is from a plain letter key
         switch (key[0]) {

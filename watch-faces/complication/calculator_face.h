@@ -39,10 +39,15 @@
 
 #include "movement.h"
 
+typedef enum {
+    CALCULATOR_MODE_NONE,
+    CALCULATOR_MODE_DIVISION,
+    CALCULATOR_MODE_MULTIPLICATION,
+    CALCULATOR_MODE_ADDITION,
+    CALCULATOR_MODE_SUBTRACTION,
+} calculator_mode_t;
+
 typedef struct {
-    bool running;
-    watch_date_time_t start_time; // while running, show the difference between this time and now
-    uint32_t seconds_counted;   // set this value when paused, and show that instead.
 } calculator_state_t;
 
 void calculator_face_setup(uint8_t watch_face_index, void ** context_ptr);
