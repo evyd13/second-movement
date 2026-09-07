@@ -236,7 +236,9 @@ static void low_energy_setting_advance(int value) {
 static void led_duration_setting_display(uint8_t subsecond) {
     char buf[8];
 
-    watch_display_text(WATCH_POSITION_TOP, "LT");
+    char tttt[3];
+    sprintf(tttt, "%02d", movement_get_backlight_dwell());
+    watch_display_text(WATCH_POSITION_TOP, tttt);
     if (subsecond % 2) {
         if (movement_get_backlight_dwell() == 0) {
             watch_display_text(WATCH_POSITION_BOTTOM, "instant ");
@@ -255,7 +257,8 @@ static void led_duration_setting_advance(int value) {
     movement_set_backlight_dwell(movement_get_backlight_dwell() + value);
     if (movement_get_backlight_dwell() > 3) {
         // set all bits to disable the LED
-        movement_set_backlight_dwell(0b111);
+        if (value > 0) movement_set_backlight_dwell(0b111);
+        else if (movement_get_backlight_dwell() == 6) movement_set_backlight_dwell(3);
     }
 }
 
@@ -275,7 +278,7 @@ static void red_led_setting_display(uint8_t subsecond) {
 
 static void red_led_setting_advance(int value) {
     movement_color_t color = movement_backlight_color();
-    if (value > 0) color.red++;
+    if (value) color.red++;
     else color.red--;
     movement_set_backlight_color(color);
 }
