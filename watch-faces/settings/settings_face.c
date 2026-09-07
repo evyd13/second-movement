@@ -275,7 +275,7 @@ static void red_led_setting_display(uint8_t subsecond) {
 
 static void red_led_setting_advance(int value) {
     movement_color_t color = movement_backlight_color();
-    if (value) color.red++;
+    if (value > 0) color.red++;
     else color.red--;
     movement_set_backlight_color(color);
 }
@@ -296,7 +296,7 @@ static void green_led_setting_display(uint8_t subsecond) {
 
 static void green_led_setting_advance(int value) {
     movement_color_t color = movement_backlight_color();
-    if (value) color.green++;
+    if (value > 0) color.green++;
     else color.green--;
     movement_set_backlight_color(color);
 }
@@ -317,7 +317,7 @@ static void blue_led_setting_display(uint8_t subsecond) {
 
 static void blue_led_setting_advance(int value) {
     movement_color_t color = movement_backlight_color();
-    if (value) color.blue++;
+    if (value > 0) color.blue++;
     else color.blue--;
     movement_set_backlight_color(color);
 }

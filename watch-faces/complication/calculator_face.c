@@ -70,7 +70,6 @@ void _calculator_init(void) {
     mode = CALCULATOR_MODE_NONE;
     is_constant = false;
     is_showing_answer = false;
-    movement_schedule_background_task(distant_future);
     _clear_input();
 }
 
@@ -198,6 +197,7 @@ bool calculator_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
             break;
         case EVENT_KEYPAD_BUTTON_DOWN:
+            movement_schedule_background_task(distant_future);
             switch(movement_get_key_pressed()) {
                 case KEYPAD_KEY_K0:
                 case KEYPAD_KEY_K1:
@@ -226,6 +226,7 @@ bool calculator_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_TIMEOUT:
+            movement_move_to_face(0);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             break;
@@ -233,11 +234,13 @@ bool calculator_face_loop(movement_event_t event, void *context) {
             if (!(strlen(current_input) == 1 && current_input[0] == '0')) {
                 _clear_input();
                 button_beep();
+                if (mode == CALCULATOR_MODE_NONE) movement_cancel_background_task();
                 break;
             } else if (mode != CALCULATOR_MODE_NONE) {
                 mode = CALCULATOR_MODE_NONE;
                 _calculator_init();
                 button_beep();
+                movement_cancel_background_task();
                 break;
             }
         default:

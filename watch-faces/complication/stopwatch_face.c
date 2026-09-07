@@ -115,7 +115,7 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_KEYPAD_BUTTON_DOWN:
-            if (movement_get_key_pressed() == MOVEMENT_BACKLIGHT_KEY) movement_illuminate_led();
+            if (movement_get_key_pressed() == MOVEMENT_BACKLIGHT_KEY) movement_default_loop_handler(event);
             if (movement_get_key_pressed() == KEYPAD_KEY_K0 && !stopwatch_state->running) {
                 if (movement_button_should_sound()) {
                     watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
@@ -152,6 +152,8 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
                     movement_cancel_background_task();
                 }
                 break;
+            } else {
+                
             }
         case EVENT_TIMEOUT:
             // explicitly ignore the timeout event so we stay on screen

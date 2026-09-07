@@ -203,18 +203,18 @@ bool set_time_face_loop(movement_event_t event, void *context) {
                 if (!setting_mode_character_index && allow_advance_page) {
                     advance_page = true;
                 }
-            } else if (
-                (movement_get_key_pressed() == KEYPAD_KEY_PLUS || \
-                movement_get_key_pressed() == KEYPAD_KEY_DECIMAL) \
-                && current_page > 3) {
-
+            } else if (movement_get_key_pressed() == KEYPAD_KEY_PLUS && current_page > 3) {
                 movement_set_clock_mode_24h(!movement_clock_mode_24h());
-                if (date_time.unit.hour > 12) {
-                    watch_clear_indicator(WATCH_INDICATOR_AM);
-                    watch_set_indicator(WATCH_INDICATOR_PM);
-                } else {
-                    watch_clear_indicator(WATCH_INDICATOR_PM);
-                    watch_set_indicator(WATCH_INDICATOR_AM);
+                button_beep();
+            } else if (movement_get_key_pressed() == KEYPAD_KEY_DECIMAL && current_page > 3) {
+                if (!movement_clock_mode_24h()) {
+                    if (date_time.unit.hour > 12) {
+                        date_time.unit.hour -= 12;
+                    } else {
+                        date_time.unit.hour += 12;
+                    }
+                    movement_set_local_date_time(date_time);
+                    button_beep();
                 }
             } else if (current_page == 3) {
                 int timezone_index_offset = 0;
