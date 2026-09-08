@@ -64,15 +64,23 @@ static void finetune_update_display(void) {
     if (finetune_page == 0) {
         watch_display_text(WATCH_POSITION_TOP, "FT");
         watch_date_time_t date_time = movement_get_utc_date_time();
-        sprintf(buf, "%04d%02d", abs(total_adjustment), date_time.unit.second);
+        sprintf(buf, "%04d  %02d", abs(total_adjustment), date_time.unit.second);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
         if (total_adjustment < 0) {
-            watch_display_text(WATCH_POSITION_TOP, "--");
+            watch_set_indicator(WATCH_INDICATOR_MINUS);
+            watch_clear_indicator(WATCH_INDICATOR_PLUS);
+        } else if (total_adjustment == 0) {
+            watch_clear_indicator(WATCH_INDICATOR_MINUS);
+            watch_clear_indicator(WATCH_INDICATOR_PLUS);
         } else {
-            watch_display_text(WATCH_POSITION_TOP, "  ");
+            watch_clear_indicator(WATCH_INDICATOR_MINUS);
+            watch_set_indicator(WATCH_INDICATOR_PLUS);
         }
     } else if (finetune_page == 1) {
+        watch_clear_indicator(WATCH_INDICATOR_MINUS);
+        watch_clear_indicator(WATCH_INDICATOR_PLUS);
+        
         float hours = finetune_get_hours_passed();
         watch_display_text(WATCH_POSITION_TOP, "DT");
         sprintf(buf, "%4d%02d", (int)hours, (int)(fmodf(hours, 1.) * 100));
@@ -164,37 +172,41 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             finetune_update_display();
             break;
 
+        case EVENT_KEYPAD_BUTTON_UP:
+            if(movement_get_key_pressed() == KEYPAD_KEY_PLUS) {
+                // We are making it slower by 25ms
+                if (finetune_page == 0) {
+                    finetune_adjust_subseconds(975);
+                }
+            } else if (movement_get_key_pressed() == KEYPAD_KEY_MINUS) {
+                if (finetune_page == 0) {
+                    finetune_adjust_subseconds(25);
+                }
+            }
+            break;
+
         case EVENT_KEYPAD_LONG_PRESS:
-            // We are making it slower by 250ms
-            if (finetune_page == 0) {
-                finetune_adjust_subseconds(250);
-            } else if (finetune_page == 2 && finetune_get_hours_passed() >= 6) {
+            if(movement_get_key_pressed() == KEYPAD_KEY_PLUS) {
+                if (finetune_page == 0) {
+                    finetune_adjust_subseconds(750);
+                }
+            } else if (movement_get_key_pressed() == KEYPAD_KEY_MINUS) {
+                if (finetune_page == 0) {
+                    finetune_adjust_subseconds(250);
+                }
+            }
+            break;
+
+        case EVENT_ADJUST_LONG_PRESS:
+            if (finetune_page == 2 && finetune_get_hours_passed() >= 6) {
                 // Applying ppm correction, only if >6 hours passed
                 nanosec_state.freq_correction += (int)round(finetune_get_correction() * 100);
                 finetune_update_correction_time();
             }
             break;
 
-        case EVENT_KEYPAD_BUTTON_UP:
-            // We are making it slower by 25ms
-            if (finetune_page == 0) {
-                finetune_adjust_subseconds(25);
-            }
-            break;
-
-        case EVENT_ADJUST_LONG_PRESS:
-            if (finetune_page == 0) {
-                finetune_adjust_subseconds(750);
-            } else if (finetune_page == 2) {
-                // Exit without applying correction to ppm, but update correction time
-                finetune_update_correction_time();
-            }
-            break;
-
         case EVENT_ADJUST_BUTTON_UP:
-            if (finetune_page == 0) {
-                finetune_adjust_subseconds(975);
-            }
+            finetune_update_correction_time();
             break;
 
         case EVENT_TIMEOUT:
@@ -210,7 +222,6 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             // You should also consider starting the tick animation, to show the wearer that this is sleep mode:
             // watch_start_sleep_animation(500);
             break;
-
         case EVENT_KEYPAD_BUTTON_DOWN:
             // don't light up every time light is hit
             break;

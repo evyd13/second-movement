@@ -49,35 +49,51 @@ static void _stopwatch_face_update_display(stopwatch_state_t *stopwatch_state, b
         uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
         uint32_t start_timestamp = watch_utility_date_time_to_unix_time(stopwatch_state->start_time, 0);
         stopwatch_state->seconds_counted = now_timestamp - start_timestamp;
-    }
 
-    if (stopwatch_state->seconds_counted >= 3456000) {
-        // display maxes out just shy of 40 days, thanks to the limit on the day digits (0-39)
-        stopwatch_state->running = false;
-        movement_cancel_background_task();
-        watch_display_text(WATCH_POSITION_TOP, "39");
-        watch_display_text(WATCH_POSITION_HOURS, "23");
-        watch_display_text(WATCH_POSITION_MINUTES, "59");
-        watch_display_text(WATCH_POSITION_SECONDS, "59");
-        return;
+        if (stopwatch_state->seconds_counted % 300 == 0 && stopwatch_state->seconds_counted > 0) {
+            // slightly longer beep every 10 minutes
+            if (movement_button_should_sound()) {
+                watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 100, movement_button_volume());
+            }
+        }
     }
-
     watch_duration_t duration = watch_utility_seconds_to_duration(stopwatch_state->seconds_counted);
     char buf[14];
-
-    sprintf(buf, "%02d%02d  ", duration.hours, duration.minutes);
-    watch_display_text(WATCH_POSITION_HOURS, buf);
-    watch_display_text(WATCH_POSITION_MINUTES, buf+2);
-    watch_display_text(WATCH_POSITION_SECONDS, buf+4);
-
-    if (duration.days != 0) {
-        sprintf(buf, "%02d", (uint8_t)duration.days);
-        watch_display_text(WATCH_POSITION_TOP, buf);
+    
+    if (stopwatch_state->seconds_counted >= 3456000) {
+        stopwatch_state->running = false;
+        movement_cancel_background_task();
     }
 
-    if (show_seconds) {
-        sprintf(buf, "%02d", duration.seconds);
-        watch_display_text(WATCH_POSITION_SECONDS, buf);
+    if (stopwatch_state->show_alternate_screen) {
+        watch_clear_indicator(WATCH_INDICATOR_COLON);
+        if (stopwatch_state->seconds_counted >= 3456000) {
+            watch_display_text(WATCH_POSITION_BOTTOM, "39      ");
+        } else {
+            sprintf(buf, "%2d      ", (uint8_t)duration.days);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
+        }
+    } else {
+        watch_set_indicator(WATCH_INDICATOR_COLON);
+        if (stopwatch_state->seconds_counted >= 3456000) {
+            // display maxes out just shy of 40 days, thanks to the limit on the day digits (0-39)
+            watch_display_text(WATCH_POSITION_HOURS, "23");
+            watch_display_text(WATCH_POSITION_MINUTES, "59");
+            watch_display_text(WATCH_POSITION_SECONDS, "59");
+            return;
+        }
+
+
+        sprintf(buf, "%02d%02d  ", duration.hours, duration.minutes);
+        watch_display_text(WATCH_POSITION_HOURS, buf);
+        watch_display_text(WATCH_POSITION_MINUTES, buf+2);
+        watch_display_text(WATCH_POSITION_SECONDS, buf+4);
+
+
+        if (show_seconds) {
+            sprintf(buf, "%02d", duration.seconds);
+            watch_display_text(WATCH_POSITION_SECONDS, buf);
+        }
     }
 }
 
@@ -106,7 +122,7 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
             // fall through
         case EVENT_TICK:
             if (stopwatch_state->start_time.reg == 0) {
-            watch_display_text(WATCH_POSITION_TOP, "ST");
+                watch_display_text(WATCH_POSITION_TOP, "ST");
                 watch_display_text(WATCH_POSITION_HOURS, "00");
                 watch_display_text(WATCH_POSITION_MINUTES, "00");
                 watch_display_text(WATCH_POSITION_SECONDS, "00");
@@ -152,8 +168,9 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
                     movement_cancel_background_task();
                 }
                 break;
-            } else {
-                
+            } else if (movement_get_key_pressed() == KEYPAD_KEY_DIVIDE) {
+                stopwatch_state->show_alternate_screen = true;
+                _stopwatch_face_update_display(stopwatch_state, true);
             }
         case EVENT_TIMEOUT:
             // explicitly ignore the timeout event so we stay on screen
@@ -173,6 +190,10 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
                 watch_set_indicator(WATCH_INDICATOR_BELL);
             }
             break;
+        case EVENT_KEYPAD_BUTTON_UP:
+        case EVENT_KEYPAD_LONG_UP:
+            if (stopwatch_state->show_alternate_screen == true) stopwatch_state->show_alternate_screen = false;
+            _stopwatch_face_update_display(stopwatch_state, true);
         default:
             return movement_default_loop_handler(event);
     }

@@ -289,28 +289,31 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_MODE_LONG_PRESS:
-            nanosec_next_edit_screen();
+            movement_move_to_next_face();
             break;
         case EVENT_KEYPAD_BUTTON_UP:
-            value_increase(1);
+            if (movement_get_key_pressed() == KEYPAD_KEY_PLUS) {
+                value_increase(1);
+            } else if (movement_get_key_pressed() == KEYPAD_KEY_MINUS) {
+                value_increase(-1);
+            }
             break;
         case EVENT_KEYPAD_LONG_PRESS:
+            if (movement_get_key_pressed() == KEYPAD_KEY_PLUS) {
+                value_increase(50);
+            } else if (movement_get_key_pressed() == KEYPAD_KEY_MINUS) {
+                if (nanosec_screen == 4) { // If we are in profile - still decrease by 1
+                    value_increase(-1);
+                } else {
+                    value_increase(-50);
+                }
+            }
+            break;
+        case EVENT_ADJUST_BUTTON_UP:
             if (nanosec_screen == 4) { // If we are in profile - apply profiles
                 nanosec_init_profile();
                 nanosec_screen = 0;
                 nanosec_update_display();
-            } else {
-                value_increase(50);
-            }
-            break;
-        case EVENT_ADJUST_BUTTON_UP:
-            value_increase(-1);
-            break;
-        case EVENT_ADJUST_LONG_PRESS:
-            if (nanosec_screen == 4) { // If we are in profile - still decrease by 1
-                value_increase(-1);
-            } else {
-                value_increase(-50);
             }
             break;
         case EVENT_TIMEOUT:

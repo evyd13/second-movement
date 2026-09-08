@@ -360,6 +360,7 @@ static void _movement_handle_button_presses(uint32_t pending_events) {
     }
 
     if (any_down) {
+        movement_scan_matrix();
         // force alarm off if the user pressed a button.
         watch_buzzer_abort_sequence();
 
@@ -370,7 +371,6 @@ static void _movement_handle_button_presses(uint32_t pending_events) {
     }
 
     if (any_down || any_up || any_long) {
-        movement_scan_matrix();
         _movement_reset_inactivity_countdown();
         movement_volatile_state.schedule_next_comp = true;
     }
