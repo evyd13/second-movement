@@ -210,10 +210,10 @@ void watch_display_float_with_best_effort(float value, const char *units) {
     char buf_fallback[10];
     const char *blank_units = "  ";
 
-    if (value < -99.9) {
+    if (value < -9999.9) {
         watch_display_text(WATCH_POSITION_BOTTOM, "Undrflow");
         return;
-    } else if (value > 199.99) {
+    } else if (value > 19999.99) {
         watch_display_text(WATCH_POSITION_BOTTOM, "Overflow");
         return;
     }

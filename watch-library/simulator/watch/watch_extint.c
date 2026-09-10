@@ -103,33 +103,61 @@ static EM_BOOL watch_invoke_key_callback(int eventType, const EmscriptenKeyboard
     if (key[1] == 0) {
         // event is from a plain letter key
         switch (key[0]) {
-            case 'A':
-            case 'a':
+            case '1':
+                button_id = BTN_ID_K1;
+                break;
+            case '2':
+                button_id = BTN_ID_K2;
+                break;
+            case '3':
+                button_id = BTN_ID_K3;
+                break;
+            case '4':
+                button_id = BTN_ID_K4;
+                break;
+            case '5':
+                button_id = BTN_ID_K5;
+                break;
+            case '6':
+                button_id = BTN_ID_K6;
+                break;
+            case '7':
+                button_id = BTN_ID_K7;
+                break;
+            case '8':
+                button_id = BTN_ID_K8;
+                break;
+            case '9':
+                button_id = BTN_ID_K9;
+                break;
+            case '0':
+                button_id = BTN_ID_K0;
+                break;
+            case '-':
+                button_id = BTN_ID_MI;
+                break;
+            case '+':
+                button_id = BTN_ID_PL;
+                break;
+            case '/':
                 button_id = BTN_ID_DI;
                 break;
-            case 'L':
-            case 'l':
-                button_id = BTN_ID_PL;
+            case '*':
+                button_id = BTN_ID_TI;
+                break;
+            case '.':
+                button_id = BTN_ID_DE;
+                break;
+            case '=':
+                button_id = BTN_ID_EQ;
+                break;
+            case 'A':
+            case 'a':
+                button_id = BTN_ID_ADJUST;
                 break;
             case 'M':
             case 'm':
                 button_id = BTN_ID_MODE;
-                break;
-            default:
-                return EM_FALSE;
-        }
-    } else if (strncmp(key, "Arrow", 5) == 0) {
-        // event is from one of the arrow keys
-        switch(key[5]) {
-            case 'U': // ArrowUp
-                button_id = BTN_ID_PL;
-                break;
-            case 'D': // ArrowDown
-            case 'L': // ArrowLeft
-                button_id = BTN_ID_MODE;
-                break;
-            case 'R': // ArrowRight
-                button_id = BTN_ID_DI;
                 break;
             default:
                 return EM_FALSE;

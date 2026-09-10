@@ -27,6 +27,8 @@
 #include "calculator_face.h"
 #include "watch.h"
 #include "watch_utility.h"
+#include <float.h>
+#include <limits.h>
 
 static const watch_date_time_t distant_future = {
     .unit = {0, 0, 0, 1, 1, 63}
@@ -40,47 +42,70 @@ static double z; // result
 static calculator_mode_t mode; // mode
 static bool is_constant;
 static bool is_showing_answer;
-static char current_input[CALCULATOR_DISPLAY_LENGTH] = { 0 };
+static long int e_number;
+static bool is_showing_e;
+static char current_display[CALCULATOR_DISPLAY_LENGTH+2] = { 0 };
 
 static inline void button_beep() {
     // play a beep as confirmation for a button press (if applicable)
     if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
 }
 
-void _clear_input(void) {
+void _clear_display(void) {
     for (uint8_t i = 0; i < CALCULATOR_DISPLAY_LENGTH; i++) {
-        current_input[i] = 0;
+        current_display[i] = 0;
     }
-    current_input[0] = '0';
+    current_display[0] = '0';
 }
 
-char* double_to_string(double value) {
-    char buf[sizeof(value)] = { 0 };
+long int str_to_int(char *str) {
+   char *endptr;
+   long int num;
 
+   num = strtol(str, &endptr, 10);
+   if (endptr == str) {
+      return 0; // no digits found
+   } else if (*endptr != '\0') {
+      return 0; // invalid character
+   } else {
+      return num;
+   }
+   return 0;
+} 
+
+void show_answer() {
+    uint8_t index_plus_character = 0;
+    sprintf(current_display, "%8G", z);
+    for (uint8_t i = 0; i < CALCULATOR_DISPLAY_LENGTH; i++) {
+        if (current_display[i] == 'e') current_display[i] = 'E';
+        if (current_display[i] == '+') index_plus_character = i;
+    }
+    if (index_plus_character != 0) {
+        char buf1[CALCULATOR_DISPLAY_LENGTH] = {0};
+        char buf2[CALCULATOR_DISPLAY_LENGTH] = {0};
+        strncpy(buf1, current_display, index_plus_character);
+        strncpy(buf2, current_display + index_plus_character + 1, CALCULATOR_DISPLAY_LENGTH-index_plus_character+2);
+        e_number = str_to_int(buf2);
+        sprintf(current_display, "%02d", e_number);
+    }
 }
 
-void save_current_input(double* destination) {
-    *destination = atof(current_input);
+void save_current_display(double* destination) {
+    *destination = strtod(current_display, "");
+    watch_display_float_with_best_effort(*destination, "    ");
 }
 
 void _calculator_init(void) {
     x = 0.00;
     y = 0.00;
-    z = 2356.543543;
+    z = 0.00;
+    e_number = 0;
     mode = CALCULATOR_MODE_NONE;
     is_constant = false;
     is_showing_answer = false;
-    _clear_input();
+    _clear_display();
 }
 
-void handle_equals_key(void) {
-    if (is_constant) {
-        
-    } else {
-        mode = CALCULATOR_MODE_NONE;
-    }
-    button_beep();
-}
 
 void calculator_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
@@ -92,6 +117,7 @@ void calculator_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
 void calculator_face_activate(void *context) {
     calculator_state_t *calculator_state = (calculator_state_t *)context;
+    _calculator_init();
 }
 
 bool string_has_decimal_point(char* s) {
@@ -118,8 +144,11 @@ void _calculator_render_mode_icons(void) {
 
 void _calculator_render_display(void) {
     char buf[CALCULATOR_DISPLAY_LENGTH] = { 0 };
-    
-    sprintf(buf, string_has_decimal_point(current_input) ? "%9s" : "%8s.", current_input);
+    if (e_number > 0) {
+        sprintf(buf, "%8s", current_display);
+    } else {
+        sprintf(buf, string_has_decimal_point(current_display) ? "%9s" : "%8s.", current_display);
+    }
     
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
     _calculator_render_mode_icons();
@@ -152,15 +181,56 @@ void handle_keypad_number_input(void) {
             c = '.'; break;
     }
     // Limit reached, return
-    if (strlen(current_input) == (string_has_decimal_point(current_input) ? CALCULATOR_DISPLAY_LENGTH - 1 : CALCULATOR_DISPLAY_LENGTH - 2)) return;
 
-    if (strlen(current_input) == 1 && current_input[0] == '0') {
+    if (is_showing_answer && !is_constant) _calculator_init();
+    if (is_showing_answer && y == 0 && is_constant) {_clear_display();}
+    if (x == 0.00 && mode != CALCULATOR_MODE_NONE) {
+        save_current_display(&x);
+        _clear_display();
+    }
+
+    if (strlen(current_display) == (string_has_decimal_point(current_display) ? CALCULATOR_DISPLAY_LENGTH - 1 : CALCULATOR_DISPLAY_LENGTH - 2)) return;
+
+    if (strlen(current_display) == 1 && current_display[0] == '0') {
         // first character typed!
-        current_input[c == '.' ? 1 : 0] = c;
+        current_display[c == '.' ? 1 : 0] = c;
     } else {
         //other characters are appended
-        if (string_has_decimal_point(current_input) && c == '.') return;
-        strncat(current_input, &c, 1);
+        if (string_has_decimal_point(current_display) && c == '.') return;
+        strncat(current_display, &c, 1);
+    }
+    button_beep();
+}
+
+void handle_equals_key(void) {
+    if (mode == CALCULATOR_MODE_NONE) {
+        save_current_display(&y);
+        z = y;
+    } else {
+        save_current_display(&y);
+        if (!is_constant) _clear_display();
+        switch(mode) {
+            case CALCULATOR_MODE_DIVISION:
+                z = x / y;
+                break;
+            case CALCULATOR_MODE_MULTIPLICATION:
+                z = x * y;
+                break;
+            case CALCULATOR_MODE_SUBTRACTION:
+                z = x - y;
+                break;
+            case CALCULATOR_MODE_ADDITION:
+                z = x + y;
+                break;
+        }
+    }
+    is_showing_answer = true;
+    show_answer();
+    if (!is_constant) {
+        mode = CALCULATOR_MODE_NONE;
+        x = 0.00;
+    } else {
+        y = 0.00;
     }
     button_beep();
 }
@@ -183,7 +253,12 @@ void handle_modifier_input(void) {
             if (mode == CALCULATOR_MODE_ADDITION) { is_constant = !is_constant;}
             else {mode = CALCULATOR_MODE_ADDITION; is_constant = false;}
             break;
+        default:
+            return;
     }
+    if (is_showing_answer && !is_constant) {
+        is_showing_answer = false;
+    } 
     button_beep();
 }
 
@@ -231,8 +306,8 @@ bool calculator_face_loop(movement_event_t event, void *context) {
         case EVENT_LOW_ENERGY_UPDATE:
             break;
         case EVENT_MODE_BUTTON_DOWN:
-            if (!(strlen(current_input) == 1 && current_input[0] == '0')) {
-                _clear_input();
+            if (!(strlen(current_display) == 1 && current_display[0] == '0')) {
+                _clear_display();
                 button_beep();
                 if (mode == CALCULATOR_MODE_NONE) movement_cancel_background_task();
                 break;
