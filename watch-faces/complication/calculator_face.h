@@ -47,6 +47,19 @@ typedef enum {
     CALCULATOR_MODE_SUBTRACTION,
 } calculator_mode_t;
 
+typedef enum {
+    CALCULATOR_DISPLAY_MODE_NONE,
+    CALCULATOR_DISPLAY_MODE_ANS,
+    CALCULATOR_DISPLAY_MODE_E,
+    CALCULATOR_DISPLAY_MODE_INPUT,
+} calculator_display_mode_t;
+
+typedef enum {
+    CALCULATOR_INPUT_MODE_NONE,
+    CALCULATOR_INPUT_MODE_X,
+    CALCULATOR_INPUT_MODE_Y,
+} calculator_input_mode_t;
+
 typedef struct {
 } calculator_state_t;
 
