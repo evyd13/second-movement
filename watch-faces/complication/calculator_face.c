@@ -41,16 +41,11 @@ static double y; // 2
 static double z; // result
 static calculator_mode_t mode; // mode
 static calculator_display_mode_t display_mode;
-static calculator_input_mode_t input_mode;
 static bool is_constant;
 static long int e_number;
+static bool should_clear_input;
+static bool has_x_input;
 static char current_display[CALCULATOR_DISPLAY_LENGTH+2] = { 0 };
-
-    // CALCULATOR_DISPLAY_MODE_NONE start
-    // CALCULATOR_DISPLAY_MODE_ANS answer showing
-    // CALCULATOR_DISPLAY_MODE_E e showing & ans
-    // CALCULATOR_DISPLAY_MODE_INPUT_X inputting the first var
-    // CALCULATOR_DISPLAY_MODE_INPUT_Y second var
 
 static inline void button_beep() {
     // play a beep as confirmation for a button press (if applicable)
@@ -62,7 +57,8 @@ void _clear_display(void) {
         current_display[i] = 0;
     }
     current_display[0] = '0';
-    display_mode = CALCULATOR_DISPLAY_MODE_NONE;
+    display_mode = CALCULATOR_DISPLAY_NONE;
+    should_clear_input = false;
 }
 
 long int str_to_int(char *str) {
@@ -81,20 +77,20 @@ long int str_to_int(char *str) {
 } 
 
 void show_answer() {
-    // uint8_t index_plus_character = 0;
+    uint8_t index_plus_character = 0;
     sprintf(current_display, "%8G", z);
-    // for (uint8_t i = 0; i < CALCULATOR_DISPLAY_LENGTH; i++) {
-    //     if (current_display[i] == 'e') current_display[i] = 'E';
-    //     if (current_display[i] == '+') index_plus_character = i;
-    // }
-    // if (index_plus_character != 0) {
-    //     char buf1[CALCULATOR_DISPLAY_LENGTH] = {0};
-    //     char buf2[CALCULATOR_DISPLAY_LENGTH] = {0};
-    //     strncpy(buf1, current_display, index_plus_character);
-    //     strncpy(buf2, current_display + index_plus_character + 1, CALCULATOR_DISPLAY_LENGTH-index_plus_character+2);
-    //     e_number = str_to_int(buf2);
-    //     sprintf(current_display, "%02d", e_number);
-    // }
+    for (uint8_t i = 0; i < CALCULATOR_DISPLAY_LENGTH; i++) {
+        if (current_display[i] == 'e') current_display[i] = 'E';
+        if (current_display[i] == '+') index_plus_character = i;
+    }
+    if (index_plus_character != 0) {
+        char buf1[CALCULATOR_DISPLAY_LENGTH] = {0};
+        char buf2[CALCULATOR_DISPLAY_LENGTH] = {0};
+        strncpy(buf1, current_display, index_plus_character);
+        strncpy(buf2, current_display + index_plus_character + 1, CALCULATOR_DISPLAY_LENGTH-index_plus_character+2);
+        e_number = str_to_int(buf2);
+        sprintf(current_display, "%s ", buf1);
+    }
 }
 
 void save_current_display(double* destination) {
@@ -106,9 +102,12 @@ void _calculator_init(void) {
     y = 0.00;
     z = 0.00;
     e_number = 0;
+
     mode = CALCULATOR_MODE_NONE;
-    display_mode = CALCULATOR_DISPLAY_MODE_NONE;
     is_constant = false;
+    should_clear_input = false;
+    has_x_input = false;
+
     _clear_display();
 }
 
@@ -151,11 +150,19 @@ void _calculator_render_display(void) {
     char buf[CALCULATOR_DISPLAY_LENGTH] = { 0 };
     sprintf(buf, string_has_decimal_point(current_display) ? "%9s" : "%8s.", current_display);
     
-    watch_display_text(WATCH_POSITION_BOTTOM, buf);
+    if (display_mode == CALCULATOR_DISPLAY_ERROR) {
+        watch_display_text(WATCH_POSITION_BOTTOM, "Error   ");
+    } else {
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
+    }
+    
     _calculator_render_mode_icons();
 }
 
 void handle_keypad_number_input(void) {
+    if (e_number > 0) return;
+    if (should_clear_input) _clear_display();
+    // handle input to current_display
     char c;
     switch(movement_get_key_pressed()) {
         case KEYPAD_KEY_K0:
@@ -181,14 +188,12 @@ void handle_keypad_number_input(void) {
         case KEYPAD_KEY_DECIMAL:
             c = '.'; break;
     }
-    
-    if (display_mode != CALCULATOR_DISPLAY_MODE_NONE) {
-        _clear_display();
-    }
-    // too long
+    if (display_mode == CALCULATOR_DISPLAY_ANS && !is_constant) return;
+
+    // don't allow more input than fits
     if (strlen(current_display) == (string_has_decimal_point(current_display) ? CALCULATOR_DISPLAY_LENGTH - 1 : CALCULATOR_DISPLAY_LENGTH - 2)) return;
 
-    if (display_mode == CALCULATOR_DISPLAY_MODE_NONE) {
+    if (strlen(current_display) == 1 && current_display[0] == '0') {
         // first character typed!
         current_display[c == '.' ? 1 : 0] = c;
     } else {
@@ -196,12 +201,10 @@ void handle_keypad_number_input(void) {
         if (string_has_decimal_point(current_display) && c == '.') return;
         strncat(current_display, &c, 1);
     }
-    display_mode = CALCULATOR_DISPLAY_MODE_INPUT;
     button_beep();
 }
 
 void calculate_answer(void) {
-    save_current_display(&y);
     switch(mode) {
         case CALCULATOR_MODE_DIVISION:
             z = x / y;
@@ -216,19 +219,23 @@ void calculate_answer(void) {
             z = x + y;
             break;
     }
-
-    display_mode = CALCULATOR_DISPLAY_MODE_ANS;
-    mode = CALCULATOR_MODE_NONE;
-    x = 0.00;
 }
 
 void handle_equals_key(void) {
+    if (e_number > 0) return;
+    save_current_display(&y);
     calculate_answer();
+
+    display_mode = CALCULATOR_DISPLAY_ANS;
+    should_clear_input = true;
+    if (!is_constant) mode = CALCULATOR_MODE_NONE;
+    if (!is_constant) x = 0.00;
     show_answer();
     button_beep();
 }
 
 void handle_modifier_input(void) {
+    if (e_number > 0) return;
     calculator_mode_t old_mode = mode;
     calculator_mode_t new_mode;
     switch(movement_get_key_pressed()) {
@@ -247,39 +254,65 @@ void handle_modifier_input(void) {
         default:
             return;
     }
-
-    if (old_mode == CALCULATOR_MODE_NONE && display_mode == CALCULATOR_DISPLAY_MODE_INPUT) {
-        save_current_display(&x);
-    }
-    display_mode = CALCULATOR_DISPLAY_MODE_NONE;
-    if (new_mode == old_mode) {
-        is_constant = !is_constant;
-    } else {
-        mode = new_mode;
+    if (old_mode == new_mode) {
+        is_constant = true;
+        if (is_constant && display_mode == CALCULATOR_DISPLAY_ANS) {
+            is_constant = false;
+            save_current_display(&x);
+            has_x_input = true;
+            should_clear_input = true;
+        }
+    } else if (old_mode != new_mode) {
+        if (is_constant && display_mode == CALCULATOR_DISPLAY_ANS) {
+            is_constant = false;
+            has_x_input = true;
+            should_clear_input = true;
+        } else if (has_x_input) {
+            save_current_display(&y);
+            calculate_answer();
+            show_answer();
+            x = 0.00;
+            y = 1.00;
+        }
         is_constant = false;
+        save_current_display(&x);
+        has_x_input = true;
+        if (display_mode != CALCULATOR_DISPLAY_NONE) {
+            display_mode = CALCULATOR_DISPLAY_NONE;
+        }
+        should_clear_input = true;
     }
+    mode = new_mode;
     button_beep();
 }
 
 bool handle_button_mode(void) {
-    //remove input first, then mode, then switch face.
-    if (display_mode != CALCULATOR_DISPLAY_MODE_NONE) {
-        _clear_display();
-        button_beep();
+    if (display_mode == CALCULATOR_DISPLAY_ANS && e_number > 0) {
+        uint8_t character_index;
+        for (uint8_t i = 0; i < CALCULATOR_DISPLAY_LENGTH; i++) {
+            if (current_display[i] == 'E') {character_index = i;break;}
+        }
+        if (character_index) {
+            display_mode = CALCULATOR_DISPLAY_E;
+            char temp_string[3] = {0};
+            sprintf(temp_string, "%02d", e_number);
+            current_display[character_index] = temp_string[0];
+            current_display[character_index+1] = temp_string[1];
+        }
         return true;
-    } else if (mode != CALCULATOR_MODE_NONE) {
-        mode = CALCULATOR_MODE_NONE;
-        is_constant = false;
-        _clear_display();
-        button_beep();
-        return true;
-    } else {
+    } else if ( display_mode == CALCULATOR_DISPLAY_ERROR || \
+                (display_mode == CALCULATOR_DISPLAY_ANS && e_number == 0) || \
+                display_mode == CALCULATOR_DISPLAY_E) {
+        // remove error OR ANS or E
         _calculator_init();
         button_beep();
-        movement_cancel_background_task();
-        return false; // fall through
+        return true;
+    } else if (!(strlen(current_display) == 1 && current_display[0] == '0')) {
+        _calculator_init();
+        button_beep();
+        return true;
     }
-    return true; // break;
+    return false; //fall through
 }
 
 bool calculator_face_loop(movement_event_t event, void *context) {
