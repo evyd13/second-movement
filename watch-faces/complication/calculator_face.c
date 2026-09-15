@@ -270,7 +270,7 @@ void handle_modifier_input(void) {
             is_constant = false;
             has_x_input = true;
             should_clear_input = true;
-        } else if (has_x_input) {
+        } else if (has_x_input && !should_clear_input) {
             save_current_display(&y);
             calculate_answer();
             show_answer();
