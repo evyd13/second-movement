@@ -21,5 +21,5 @@ SRCS += \
   ./watch-faces/clock/close_enough_face.c \
   ./watch-faces/clock/ke_decimal_time_face.c \
   ./watch-faces/clock/solar_time_face.c \
-#  ./watch-faces/clock/world_clock2_face.c \
+  ./watch-faces/clock/world_clock2_face.c \
 # New watch faces go above this line.
