@@ -91,6 +91,9 @@ void show_answer() {
         e_number = str_to_int(buf2);
         sprintf(current_display, "%s ", buf1);
     }
+    if (strstr(current_display, "INF") != NULL) {
+        display_mode = CALCULATOR_DISPLAY_ERROR;
+    }
 }
 
 void save_current_display(double* destination) {
