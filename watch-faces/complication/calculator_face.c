@@ -76,23 +76,48 @@ long int str_to_int(char *str) {
    return 0;
 } 
 
+
+
 void show_answer() {
-    uint8_t index_plus_character = 0;
-    sprintf(current_display, "%8G", z);
-    for (uint8_t i = 0; i < CALCULATOR_DISPLAY_LENGTH; i++) {
-        if (current_display[i] == 'e') current_display[i] = 'E';
-        if (current_display[i] == '+') index_plus_character = i;
-    }
-    if (index_plus_character != 0) {
+    if (z > 99999999.99999999 || z < - 9999999.99999999) {
+        int8_t index_plus_character = 0;
+        sprintf(current_display, "%8G", z);
+        for (uint8_t i = 0; i < CALCULATOR_DISPLAY_LENGTH; i++) {
+            if (current_display[i] == 'e') current_display[i] = 'E';
+            if (current_display[i] == '+') index_plus_character = i;
+        }
+        if (index_plus_character != 0) {
+            char buf1[CALCULATOR_DISPLAY_LENGTH] = {0};
+            char buf2[CALCULATOR_DISPLAY_LENGTH] = {0};
+            strncpy(buf1, current_display, index_plus_character);
+            strncpy(buf2, current_display + index_plus_character + 1, CALCULATOR_DISPLAY_LENGTH-index_plus_character+2);
+            e_number = str_to_int(buf2);
+            sprintf(current_display, "%s ", buf1);
+        }
+        if (strstr(current_display, "INF") != NULL) {
+            display_mode = CALCULATOR_DISPLAY_ERROR;
+        }
+    } else {
+        char buf[18] = {0};
         char buf1[CALCULATOR_DISPLAY_LENGTH] = {0};
-        char buf2[CALCULATOR_DISPLAY_LENGTH] = {0};
-        strncpy(buf1, current_display, index_plus_character);
-        strncpy(buf2, current_display + index_plus_character + 1, CALCULATOR_DISPLAY_LENGTH-index_plus_character+2);
-        e_number = str_to_int(buf2);
-        sprintf(current_display, "%s ", buf1);
-    }
-    if (strstr(current_display, "INF") != NULL) {
-        display_mode = CALCULATOR_DISPLAY_ERROR;
+        sprintf(buf, "%.7f", z);
+        // 0.00000001
+        // 0.00010000
+        // 0.10000000
+        uint8_t last_non_zero_digit_index = 0;
+        for (uint8_t i = 0; i < 18; i++) {
+            if (buf[i] != '0' && buf[i] >= 32 && buf[i] != '.') {
+                last_non_zero_digit_index = i;
+                break;
+            }
+        }
+        if (last_non_zero_digit_index > 0) {
+            strncpy(buf1, buf, last_non_zero_digit_index+1);
+            sprintf(current_display, "%s", buf1);
+        } else {
+            //integer
+            sprintf(current_display, "%d", (int) z);
+        }
     }
 }
 
