@@ -211,7 +211,7 @@ static void _clock_display(movement_event_t event, world_clock2_state_t *state)
 
     /* Update indicators and reset previous date time */
     if (refresh_face) {
-        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+        watch_clear_indicator(WATCH_INDICATOR_PLUS);
         state->previous_date_time = 0xFFFFFFFF;
         refresh_face = false;
     }
@@ -262,9 +262,9 @@ static void _settings_display(movement_event_t event, world_clock2_state_t *stat
 
     /* Mark selected zone */
     if (state->zones[state->current_zone].selected)
-        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+        watch_set_indicator(WATCH_INDICATOR_PLUS);
     else
-        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+        watch_clear_indicator(WATCH_INDICATOR_PLUS);
 
     /* Display zone abbreviation on top */
     _get_zone_info(state, zone_abbr, &zone_offset);
