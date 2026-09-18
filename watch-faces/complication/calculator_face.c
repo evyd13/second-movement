@@ -100,19 +100,15 @@ void show_answer() {
     } else {
         char buf[18] = {0};
         char buf1[CALCULATOR_DISPLAY_LENGTH] = {0};
-        sprintf(buf, "%.7f", z);
-        // 0.00000001
-        // 0.00010000
-        // 0.10000000
+        sprintf(buf, "%.8f", z);
         uint8_t last_non_zero_digit_index = 0;
         for (uint8_t i = 0; i < 18; i++) {
             if (buf[i] != '0' && buf[i] >= 32 && buf[i] != '.') {
                 last_non_zero_digit_index = i;
-                break;
             }
         }
         if (last_non_zero_digit_index > 0) {
-            strncpy(buf1, buf, last_non_zero_digit_index+1);
+            strncpy(buf1, buf, (last_non_zero_digit_index+1 > 9) ? 9 : last_non_zero_digit_index+1);
             sprintf(current_display, "%s", buf1);
         } else {
             //integer
@@ -333,10 +329,12 @@ bool handle_button_mode(void) {
                 display_mode == CALCULATOR_DISPLAY_E) {
         // remove error OR ANS or E
         _calculator_init();
+        movement_cancel_background_task();
         button_beep();
         return true;
     } else if (!(strlen(current_display) == 1 && current_display[0] == '0')) {
         _calculator_init();
+        movement_cancel_background_task();
         button_beep();
         return true;
     }
