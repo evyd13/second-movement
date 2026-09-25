@@ -266,7 +266,7 @@ movement_watch_face_advisory_t clock_face_advise(void *context) {
     movement_watch_face_advisory_t retval = { 0 };
     clock_state_t *state = (clock_state_t *) context;
 
-    if (state->time_signal_enabled) {
+    if (movement_signal_enabled()) {
         watch_date_time_t date_time = movement_get_local_date_time();
         retval.wants_background_task = date_time.unit.minute == 0;
     }
