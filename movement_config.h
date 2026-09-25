@@ -30,11 +30,10 @@
 const watch_face_t watch_faces[] = {
     clock_face,
     alarm_face,
+    world_clock2_face,
     fast_stopwatch_face,
-    countdown_face,
+    timer_face,
     sunrise_sunset_face,
-    days_since_face,
-    pulsometer_face,
 
     temperature_display_face,
     voltage_face,
@@ -60,7 +59,7 @@ const watch_face_t watch_faces[] = {
 /* Determines the intensity of the led colors
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity
  */
-#define MOVEMENT_DEFAULT_RED_COLOR 0x3
+#define MOVEMENT_DEFAULT_RED_COLOR 0x7
 #define MOVEMENT_DEFAULT_GREEN_COLOR 0xF
 #define MOVEMENT_DEFAULT_BLUE_COLOR 0x0
 
