@@ -87,6 +87,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "ALM", "AL");
             if (state->alarm_is_on) watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+            if (movement_signal_enabled()) watch_set_indicator(WATCH_INDICATOR_BELL);
             watch_set_colon();
             _alarm_face_display_alarm_time(state);
             break;
@@ -127,14 +128,35 @@ bool alarm_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_BUTTON_UP:
             if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
                 // in normal mode, toggle alarm on/off.
-                state->alarm_is_on ^= 1;
-                if ( state->alarm_is_on ) {
+                if (!state->alarm_is_on && !movement_signal_enabled()) {
+                    // enable alarm
+                    state->alarm_is_on ^= 1;
+                    watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+                    movement_set_alarm_enabled(true);
+                } else if (state->alarm_is_on && !movement_signal_enabled()) {
+                    // if alarm enabled, disable it and enable signal
+                    state->alarm_is_on ^= 1;
+                    watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                    movement_set_alarm_enabled(false);
+
+                    movement_set_signal_enabled(true);
+                    watch_set_indicator(WATCH_INDICATOR_BELL);
+                } else if(!state->alarm_is_on && movement_signal_enabled()) {
+                    // if signal enabled, alarm is off, enable alarm
+                    state->alarm_is_on ^= 1;
                     watch_set_indicator(WATCH_INDICATOR_SIGNAL);
                     movement_set_alarm_enabled(true);
                 } else {
+                    // turn both off
+                    state->alarm_is_on ^= 1;
                     watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
                     movement_set_alarm_enabled(false);
+                    
+                    movement_set_signal_enabled(false);
+                    watch_clear_indicator(WATCH_INDICATOR_BELL);
                 }
+                
+                button_beep();
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
@@ -145,10 +167,12 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                 case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
                     // increment hour, wrap around to 0 at 23.
                     state->hour = (state->hour + 1) % 24;
+                    button_beep();
                     break;
                 case ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
                     // increment minute, wrap around to 0 at 59.
                     state->minute = (state->minute + 1) % 60;
+                    button_beep();
                     break;
             }
             _alarm_face_display_alarm_time(state);
