@@ -67,7 +67,7 @@ static bool clock_is_pm(watch_date_time_t date_time) {
 }
 
 static void clock_indicate_pm(watch_date_time_t date_time) {
-    if (movement_clock_mode_24h()) { return; }
+    if (movement_clock_mode_24h()) { clock_indicate(WATCH_INDICATOR_PM, false); return; }
     clock_indicate(WATCH_INDICATOR_PM, clock_is_pm(date_time));
 }
 
@@ -234,6 +234,16 @@ bool clock_face_loop(movement_event_t event, void *context) {
         case EVENT_LOW_ENERGY_UPDATE:
             clock_start_tick_tock_animation();
             clock_display_low_energy(movement_get_local_date_time());
+            break;
+        case EVENT_ALARM_BUTTON_DOWN:
+            movement_set_clock_mode_24h(!movement_clock_mode_24h());
+            clock_indicate_24h();
+            current = movement_get_local_date_time();
+            clock_indicate_pm(current);
+            if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
+                current = clock_24h_to_12h(current);
+            }
+            clock_display_all(current);
             break;
         case EVENT_TICK:
         case EVENT_ACTIVATE:
