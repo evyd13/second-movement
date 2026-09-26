@@ -24,7 +24,7 @@
  */
 
 #define MOVEMENT_LONG_PRESS_TICKS 64
-#define MOVEMENT_REALLY_LONG_PRESS_TICKS 192
+#define MOVEMENT_REALLY_LONG_PRESS_TICKS 128
 #define MOVEMENT_MAX_LONG_PRESS_TICKS 1280 // get a chance to check if a button held down over 10 seconds is a glitch
 
 #include <stdio.h>
@@ -485,7 +485,7 @@ void movement_force_led_off(void) {
 
 bool movement_default_loop_handler(movement_event_t event) {
     switch (event.event_type) {
-        case EVENT_MODE_BUTTON_UP:
+        case EVENT_MODE_BUTTON_DOWN:
             movement_move_to_next_face();
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -497,8 +497,8 @@ bool movement_default_loop_handler(movement_event_t event) {
                 movement_force_led_off();
             }
             break;
-        case EVENT_MODE_LONG_PRESS:
-            if (MOVEMENT_SECONDARY_FACE_INDEX && movement_state.current_face_idx == 0) {
+        case EVENT_MODE_REALLY_LONG_PRESS:
+            if (MOVEMENT_SECONDARY_FACE_INDEX && movement_state.current_face_idx < MOVEMENT_SECONDARY_FACE_INDEX) {
                 movement_move_to_face(MOVEMENT_SECONDARY_FACE_INDEX);
             } else {
                 movement_move_to_face(0);
