@@ -285,20 +285,14 @@ static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
         case EVENT_LOW_ENERGY_UPDATE:
             _clock_display(event, state);
             break;
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ALARM_BUTTON_DOWN:
             refresh_face = true;
             state->current_zone = _next_selected_zone(state, FORWARD);
             state->show_zone_name = NAME_DISPLAY_TIME;
             _clock_display(event, state);
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
-            /* Do nothing. No light. */
-            break;
-        case EVENT_LIGHT_BUTTON_UP:
-            refresh_face = true;
-            state->current_zone = _next_selected_zone(state, BACKWARD);
-            state->show_zone_name = NAME_DISPLAY_TIME;
-            _clock_display(event, state);
+            movement_illuminate_led();
             break;
         case EVENT_LIGHT_LONG_PRESS:
             /* Switch to settings mode */
@@ -309,7 +303,7 @@ static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
             _settings_display(event, state);
             _beep(BEEP_BUTTON);
             break;
-        case EVENT_MODE_BUTTON_UP:
+        case EVENT_MODE_BUTTON_DOWN:
             /* Reset frequency and move to next face */
             movement_request_tick_frequency(1);
             movement_move_to_next_face();
@@ -351,13 +345,6 @@ static bool _settings_loop(movement_event_t event, world_clock2_state_t *state)
             _settings_display(event, state);
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            state->current_zone = mod(state->current_zone + BACKWARD, NUM_ZONE_NAMES);
-            _settings_display(event, state);
-            break;
-        case EVENT_LIGHT_BUTTON_DOWN:
-            /* Do nothing. No light. */
-            break;
-        case EVENT_ALARM_LONG_PRESS:
             /* Toggle selection of current zone */
             zone = state->current_zone;
             state->zones[zone].selected = !state->zones[zone].selected;
@@ -368,13 +355,16 @@ static bool _settings_loop(movement_event_t event, world_clock2_state_t *state)
                 _beep(BEEP_DISABLE);
             }
             break;
-        case EVENT_LIGHT_LONG_PRESS:
+        case EVENT_ALARM_LONG_PRESS:
             state->show_zone_name = !state->show_zone_name;
             _settings_display(event, state);
             break;
-        case EVENT_MODE_BUTTON_UP:
+        case EVENT_LIGHT_LONG_PRESS:
             _exit_settings_mode(event, state);
             _beep(BEEP_BUTTON);
+            break;
+        case EVENT_LIGHT_BUTTON_DOWN:
+            // no light.
             break;
         case EVENT_TIMEOUT:
             _exit_settings_mode(event, state);
