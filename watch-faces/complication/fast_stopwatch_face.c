@@ -320,7 +320,7 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
     if (can_beep && (elapsed >> 7) > 0) {
         // slightly longer beep every 10 minutes
         if (movement_button_should_sound()) {
-            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 100, movement_button_volume());
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 100, movement_signal_volume());
         }
     }
 
