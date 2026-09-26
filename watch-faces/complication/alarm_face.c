@@ -125,44 +125,39 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                     break;
             }
             break;
-        case EVENT_ALARM_BUTTON_UP:
-            if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
-                // in normal mode, toggle alarm on/off.
-                if (!state->alarm_is_on && !movement_signal_enabled()) {
-                    // enable alarm
-                    state->alarm_is_on ^= 1;
-                    watch_set_indicator(WATCH_INDICATOR_SIGNAL);
-                    movement_set_alarm_enabled(true);
-                } else if (state->alarm_is_on && !movement_signal_enabled()) {
-                    // if alarm enabled, disable it and enable signal
-                    state->alarm_is_on ^= 1;
-                    watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
-                    movement_set_alarm_enabled(false);
-
-                    movement_set_signal_enabled(true);
-                    watch_set_indicator(WATCH_INDICATOR_BELL);
-                } else if(!state->alarm_is_on && movement_signal_enabled()) {
-                    // if signal enabled, alarm is off, enable alarm
-                    state->alarm_is_on ^= 1;
-                    watch_set_indicator(WATCH_INDICATOR_SIGNAL);
-                    movement_set_alarm_enabled(true);
-                } else {
-                    // turn both off
-                    state->alarm_is_on ^= 1;
-                    watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
-                    movement_set_alarm_enabled(false);
-                    
-                    movement_set_signal_enabled(false);
-                    watch_clear_indicator(WATCH_INDICATOR_BELL);
-                }
-                
-                button_beep();
-            }
-            break;
         case EVENT_ALARM_BUTTON_DOWN:
             switch (state->setting_mode) {
                 case ALARM_FACE_SETTING_MODE_NONE:
-                    // nothing to do here, alarm toggle is handled in EVENT_ALARM_BUTTON_UP.
+                    // in normal mode, toggle alarm on/off.
+                    if (!state->alarm_is_on && !movement_signal_enabled()) {
+                        // enable alarm
+                        state->alarm_is_on ^= 1;
+                        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+                        movement_set_alarm_enabled(true);
+                    } else if (state->alarm_is_on && !movement_signal_enabled()) {
+                        // if alarm enabled, disable it and enable signal
+                        state->alarm_is_on ^= 1;
+                        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                        movement_set_alarm_enabled(false);
+
+                        movement_set_signal_enabled(true);
+                        watch_set_indicator(WATCH_INDICATOR_BELL);
+                    } else if(!state->alarm_is_on && movement_signal_enabled()) {
+                        // if signal enabled, alarm is off, enable alarm
+                        state->alarm_is_on ^= 1;
+                        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+                        movement_set_alarm_enabled(true);
+                    } else {
+                        // turn both off
+                        state->alarm_is_on ^= 1;
+                        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                        movement_set_alarm_enabled(false);
+                        
+                        movement_set_signal_enabled(false);
+                        watch_clear_indicator(WATCH_INDICATOR_BELL);
+                    }
+                    
+                    button_beep();
                     break;
                 case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
                     // increment hour, wrap around to 0 at 23.
@@ -177,7 +172,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
             }
             _alarm_face_display_alarm_time(state);
             break;
-        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_LIGHT_LONG_PRESS:
             if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
                 // long press in normal mode: move to hour setting mode, request fast tick.
                 state->setting_mode = ALARM_FACE_SETTING_MODE_SETTING_HOUR;
