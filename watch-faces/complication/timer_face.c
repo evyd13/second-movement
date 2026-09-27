@@ -219,9 +219,8 @@ bool timer_face_loop(movement_event_t event, void *context) {
             switch (state->mode) {
                 case waiting:
                 case running:
-                    movement_illuminate_led();
-                    break;
                 case pausing:
+                    movement_illuminate_led();
                     break;
                 case setting:
                     break;
@@ -243,7 +242,11 @@ bool timer_face_loop(movement_event_t event, void *context) {
                     _start(state, false);
                     break;
                 case waiting:
-                    _start(state, true);
+                    uint8_t last_timer = state->current_timer;
+                    state->current_timer = (state->current_timer + 1) % TIMER_SLOTS;
+                    _set_next_valid_timer(state);
+                    // start the time immediately if there is only one valid timer slot
+                    if (last_timer == state->current_timer) _start(state, true);
                     break;
                 case setting:
                     _settings_increment(state);
@@ -268,9 +271,12 @@ bool timer_face_loop(movement_event_t event, void *context) {
                     }
                     break;
                 case waiting:
-                case pausing:
+                    _start(state, true);
+                    break;
                 case running:
-                    state->timers[state->current_timer].unit.repeat ^= 1;
+                case pausing:
+                    // _reset(state);
+                    // button_beep();
                     break;
                 default:
                     break;
@@ -281,17 +287,12 @@ bool timer_face_loop(movement_event_t event, void *context) {
             movement_default_loop_handler(event); // turn led off
             switch (state->mode) {
                 case waiting:
-                    uint8_t last_timer = state->current_timer;
-                    state->current_timer = (state->current_timer + 1) % TIMER_SLOTS;
-                    _set_next_valid_timer(state);
-                    // start the time immediately if there is only one valid timer slot
-                    if (last_timer == state->current_timer) _start(state, true);
-                    break;
-                case running:
                     break;
                 case pausing:
                     _reset(state);
                     button_beep();
+                    break;
+                case running:
                     break;
                 case setting:
                     if (state->settings_state == 2) _resume_setting(state);
@@ -313,6 +314,8 @@ bool timer_face_loop(movement_event_t event, void *context) {
             } else if (state->mode == setting) {
                 _resume_setting(state);
                 button_beep();
+            } else {
+                state->timers[state->current_timer].unit.repeat ^= 1;
             }
             _draw(state, event.subsecond);
             break;

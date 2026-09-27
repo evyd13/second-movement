@@ -34,6 +34,11 @@ extern nanosec_state_t nanosec_state;
 int total_adjustment;
 int8_t finetune_page;
 
+static inline void button_beep() {
+    // play a beep as confirmation for a button press (if applicable)
+    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
+}
+
 void finetune_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     (void) context_ptr;
@@ -150,7 +155,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             finetune_update_display();
             break;
 
-        case EVENT_MODE_BUTTON_UP:
+        case EVENT_MODE_BUTTON_DOWN:
             // Only allow for fast exit when correction is 0!!!
             if (finetune_page == 0 && total_adjustment == 0) {
                 movement_move_to_next_face();
@@ -158,12 +163,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
                 finetune_page = (finetune_page + 1) % 3;
                 finetune_update_display();
             }
-            break;
-
-        case EVENT_MODE_LONG_PRESS:
-            // You shouldn't need to change this case; Mode almost always moves to the next watch face.
-            finetune_page = (finetune_page + 1) % 3;
-            finetune_update_display();
+            button_beep();
             break;
 
         case EVENT_LIGHT_LONG_PRESS:
@@ -175,6 +175,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
                 nanosec_state.freq_correction += (int)round(finetune_get_correction() * 100);
                 finetune_update_correction_time();
             }
+            button_beep();
             break;
 
         case EVENT_LIGHT_BUTTON_UP:
@@ -182,9 +183,11 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             if (finetune_page == 0) {
                 finetune_adjust_subseconds(25);
             }
+            button_beep();
             break;
 
         case EVENT_ALARM_LONG_PRESS:
+            button_beep();
             if (finetune_page == 0) {
                 finetune_adjust_subseconds(750);
             } else if (finetune_page == 2) {
@@ -197,6 +200,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             if (finetune_page == 0) {
                 finetune_adjust_subseconds(975);
             }
+            button_beep();
             break;
 
         case EVENT_TIMEOUT:

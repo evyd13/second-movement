@@ -97,19 +97,19 @@ static inline void _beep(beep_type_t beep_type)
 
     switch (beep_type) {
         case BEEP_BUTTON:
-            watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
             break;
 
         case BEEP_ENABLE:
-            watch_buzzer_play_note(BUZZER_NOTE_G7, 50);
-            watch_buzzer_play_note(BUZZER_NOTE_REST, 75);
-            watch_buzzer_play_note(BUZZER_NOTE_C8, 75);
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_G7, 50, movement_button_volume());
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_REST, 75, movement_button_volume());
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C8, 75, movement_button_volume());
             break;
 
         case BEEP_DISABLE:
-            watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
-            watch_buzzer_play_note(BUZZER_NOTE_REST, 75);
-            watch_buzzer_play_note(BUZZER_NOTE_G7, 75);
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C8, 50, movement_button_volume());
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_REST, 75, movement_button_volume());
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_G7, 75, movement_button_volume());
             break;
     }
 }
@@ -290,6 +290,7 @@ static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
             state->current_zone = _next_selected_zone(state, FORWARD);
             state->show_zone_name = NAME_DISPLAY_TIME;
             _clock_display(event, state);
+            _beep(BEEP_BUTTON);
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             movement_illuminate_led();
@@ -343,6 +344,7 @@ static bool _settings_loop(movement_event_t event, world_clock2_state_t *state)
         case EVENT_ALARM_BUTTON_UP:
             state->current_zone = mod(state->current_zone + FORWARD, NUM_ZONE_NAMES);
             _settings_display(event, state);
+            _beep(BEEP_BUTTON);
             break;
         case EVENT_LIGHT_BUTTON_UP:
             /* Toggle selection of current zone */

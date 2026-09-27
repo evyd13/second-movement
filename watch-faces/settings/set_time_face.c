@@ -37,9 +37,14 @@ const char set_time_face_fallback_titles[SET_TIME_FACE_NUM_SETTINGS][3] = {"YR",
 static bool _quick_ticks_running;
 static int32_t current_offset;
 
+static inline void button_beep() {
+    // play a beep as confirmation for a button press (if applicable)
+    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
+}
+
 static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_page) {
     // handles short or long pressing of the alarm button
-
+    button_beep();
     switch (current_page) {
         case 3: // time zone
             movement_set_timezone_index(movement_get_timezone_index() + 1);
@@ -141,6 +146,7 @@ bool set_time_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_DOWN:
             current_page = (current_page + 1) % SET_TIME_FACE_NUM_SETTINGS;
             *((uint8_t *)context) = current_page;
+            button_beep();
             break;
         case EVENT_ALARM_BUTTON_DOWN:
             _abort_quick_ticks();

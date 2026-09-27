@@ -39,6 +39,11 @@
 #include <emscripten.h>
 #endif
 
+static inline void button_beep() {
+    // play a beep as confirmation for a button press (if applicable)
+    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
+}
+
 static const uint8_t _location_count = sizeof(longLatPresets) / sizeof(long_lat_presets_t);
 
 static void persist_location_to_filesystem(movement_location_t new_location) {
@@ -519,8 +524,9 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
                         _sunrise_sunset_face_update_location_register(state);
                     }
                 }
+                button_beep();
                 _sunrise_sunset_face_update_settings_display(event, context);
-            } else if (_location_count <= 1) {
+            } else {
                 movement_illuminate_led();
             }
             if (state->page == 0) {
@@ -529,42 +535,49 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_LIGHT_LONG_PRESS:
-            if (_location_count <= 1) break;
-            else if (!state->page) movement_illuminate_led();
-            break;
-        case EVENT_LIGHT_BUTTON_UP:
-            if (state->page == 0 && _location_count > 1) {
-                state->longLatToUse = (state->longLatToUse + 1) % _location_count;
-                _sunrise_sunset_face_update(state);
-            }
-            break;
-        case EVENT_ALARM_BUTTON_UP:
-            if (state->page) {
-                _sunrise_sunset_face_advance_digit(state);
-                _sunrise_sunset_face_update_settings_display(event, context);
-            } else {
-                state->rise_index = (state->rise_index + 1) % 2;
-                _sunrise_sunset_face_update(state);
-            }
-            break;
-        case EVENT_ALARM_LONG_PRESS:
             if (state->page == 0) {
-            if (state->longLatToUse != 0) {
-                state->longLatToUse = 0;
-                _sunrise_sunset_face_update(state);
-                break;
-            }
+                if (state->longLatToUse != 0) {
+                    // state->longLatToUse = 0;
+                    // _sunrise_sunset_face_update(state);
+                    break;
+                }
                 state->page++;
                 state->active_digit = 0;
                 watch_clear_display();
                 movement_request_tick_frequency(4);
                 _sunrise_sunset_face_update_settings_display(event, context);
-            }
-            else {
+                button_beep();
+            } else {
+                if (_location_count <= 1) break;
+                else if (!state->page) movement_illuminate_led();
                 state->active_digit = 0;
                 state->page = 0;
                 _sunrise_sunset_face_update_location_register(state);
                 _sunrise_sunset_face_update(state);
+                button_beep();
+            }
+            break;
+        case EVENT_ALARM_BUTTON_DOWN:
+            if (state->page > 0) {
+                _sunrise_sunset_face_advance_digit(state);
+                _sunrise_sunset_face_update_settings_display(event, context);
+                button_beep();
+            }
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+            if (state->page == 0) {
+                state->rise_index = (state->rise_index + 1) % 2;
+                _sunrise_sunset_face_update(state);
+                button_beep();
+            }
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            if (!state->page) {
+                if (state->page == 0 && _location_count > 1) {
+                state->longLatToUse = (state->longLatToUse + 1) % _location_count;
+                _sunrise_sunset_face_update(state);
+                button_beep();
+                }
             }
             break;
         case EVENT_TIMEOUT:
@@ -577,6 +590,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
                 state->rise_index = 0;
                 movement_request_tick_frequency(1);
                 _sunrise_sunset_face_update(state);
+                button_beep();
             }
             break;
         default:

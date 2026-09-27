@@ -40,6 +40,11 @@ bool nanosec_changed = false; // We try to avoid saving settings when no changes
 
 const float voltage_coefficient = 0.241666667 * dithering; // 10 * ppm/V. Nominal frequency is at 3V.
 
+static inline void button_beep() {
+    // play a beep as confirmation for a button press (if applicable)
+    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
+}
+
 static void nanosec_init_profile(void) {
     nanosec_changed = true;
     nanosec_state.correction_cadence = 10;
@@ -287,12 +292,15 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
             } else {
                 nanosec_next_edit_screen();
             }
+            button_beep();
             break;
         case EVENT_MODE_LONG_PRESS:
             nanosec_next_edit_screen();
+            button_beep();
             break;
         case EVENT_LIGHT_BUTTON_UP:
             value_increase(1);
+            button_beep();
             break;
         case EVENT_LIGHT_LONG_PRESS:
             if (nanosec_screen == 4) { // If we are in profile - apply profiles
@@ -302,9 +310,11 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
             } else {
                 value_increase(50);
             }
+            button_beep();
             break;
         case EVENT_ALARM_BUTTON_UP:
             value_increase(-1);
+            button_beep();
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (nanosec_screen == 4) { // If we are in profile - still decrease by 1
@@ -312,6 +322,7 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
             } else {
                 value_increase(-50);
             }
+            button_beep();
             break;
         case EVENT_TIMEOUT:
             // Your watch face will receive this event after a period of inactivity. If it makes sense to resign,

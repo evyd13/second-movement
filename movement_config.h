@@ -30,9 +30,9 @@
 const watch_face_t watch_faces[] = {
     clock_face,
     alarm_face,
-    world_clock2_face,
     fast_stopwatch_face,
     timer_face,
+    world_clock2_face,
     sunrise_sunset_face,
 
     temperature_display_face,
@@ -102,7 +102,7 @@ const watch_face_t watch_faces[] = {
  * 2: 3 seconds
  * 3: 5 seconds
  */
-#define MOVEMENT_DEFAULT_LED_DURATION 1
+#define MOVEMENT_DEFAULT_LED_DURATION 0
 
 /* Optionally debounce button presses (disable by default).
  * A value of 4 is a good starting point if you have issues
