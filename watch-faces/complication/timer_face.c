@@ -218,15 +218,33 @@ bool timer_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_DOWN:
             switch (state->mode) {
                 case waiting:
-                case running:
+                    state->timers[state->current_timer].unit.repeat ^= 1;
                 case pausing:
+                case running:
                     movement_illuminate_led();
                     break;
                 case setting:
+                    if (state->settings_state == 2) _resume_setting(state);
+                    state->settings_state = (state->settings_state + 1) % 3;
+                    button_beep();
                     break;
                 default:
                     break;
             }
+            _draw(state, event.subsecond);
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            if (state->mode == waiting) {
+                // initiate settings
+                state->mode = setting;
+                state->settings_state = 0;
+                movement_request_tick_frequency(4);
+                button_beep();
+            } else if (state->mode == setting) {
+                _resume_setting(state);
+                button_beep();
+            }
+            _draw(state, event.subsecond);
             break;
         case EVENT_ALARM_BUTTON_UP:
             _abort_quick_cycle(state);
@@ -242,11 +260,7 @@ bool timer_face_loop(movement_event_t event, void *context) {
                     _start(state, false);
                     break;
                 case waiting:
-                    uint8_t last_timer = state->current_timer;
-                    state->current_timer = (state->current_timer + 1) % TIMER_SLOTS;
-                    _set_next_valid_timer(state);
-                    // start the time immediately if there is only one valid timer slot
-                    if (last_timer == state->current_timer) _start(state, true);
+                    _start(state, true);
                     break;
                 case setting:
                     _settings_increment(state);
@@ -271,51 +285,20 @@ bool timer_face_loop(movement_event_t event, void *context) {
                     }
                     break;
                 case waiting:
-                    _start(state, true);
+                    uint8_t last_timer = state->current_timer;
+                    state->current_timer = (state->current_timer + 1) % TIMER_SLOTS;
+                    _set_next_valid_timer(state);
+                    // start the time immediately if there is only one valid timer slot
+                    if (last_timer == state->current_timer) _start(state, true);
+                    button_beep();
                     break;
                 case running:
-                case pausing:
-                    // _reset(state);
-                    // button_beep();
-                    break;
-                default:
-                    break;
-            }
-            _draw(state, event.subsecond);
-            break;
-        case EVENT_LIGHT_BUTTON_UP:
-            movement_default_loop_handler(event); // turn led off
-            switch (state->mode) {
-                case waiting:
-                    break;
                 case pausing:
                     _reset(state);
                     button_beep();
                     break;
-                case running:
-                    break;
-                case setting:
-                    if (state->settings_state == 2) _resume_setting(state);
-                    state->settings_state = (state->settings_state + 1) % 3;
-                    button_beep();
-                    break;
                 default:
                     break;
-            }
-            _draw(state, event.subsecond);
-            break;
-        case EVENT_LIGHT_LONG_PRESS:
-            if (state->mode == waiting) {
-                // initiate settings
-                state->mode = setting;
-                state->settings_state = 0;
-                movement_request_tick_frequency(4);
-                button_beep();
-            } else if (state->mode == setting) {
-                _resume_setting(state);
-                button_beep();
-            } else {
-                state->timers[state->current_timer].unit.repeat ^= 1;
             }
             _draw(state, event.subsecond);
             break;
