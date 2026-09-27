@@ -92,13 +92,27 @@ bool alarm_face_loop(movement_event_t event, void *context) {
             _alarm_face_display_alarm_time(state);
             break;
         case EVENT_TICK:
-            // No action needed for tick events in normal mode; we displayed our stuff in EVENT_ACTIVATE.
             if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE)
                 break;
-
+            if (state->quick_cycle) {
+                switch(state->setting_mode) {
+                    case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
+                        // increment hour, wrap around to 0 at 23.
+                        state->hour = (state->hour + 1) % 24;
+                        button_beep();
+                        break;
+                    case ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
+                        // increment minute, wrap around to 0 at 59.
+                        state->minute = (state->minute + 1) % 60;
+                        button_beep();
+                        break;
+                    default:
+                        break;
+                }
+            }
             // but in settings mode, we need to blink up the parameter we're setting.
             _alarm_face_display_alarm_time(state);
-            if (event.subsecond % 2 == 0) 
+            if (event.subsecond % 2 == 0 && !state->quick_cycle) 
                 watch_display_text((state->setting_mode == ALARM_FACE_SETTING_MODE_SETTING_HOUR) ? WATCH_POSITION_HOURS : WATCH_POSITION_MINUTES, "  ");
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -168,6 +182,31 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                     // increment minute, wrap around to 0 at 59.
                     state->minute = (state->minute + 1) % 60;
                     button_beep();
+                    break;
+            }
+            _alarm_face_display_alarm_time(state);
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            switch (state->setting_mode) {
+                case ALARM_FACE_SETTING_MODE_NONE:
+                    break;
+                case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
+                case ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
+                    state->quick_cycle = true;
+                    movement_request_tick_frequency(8);
+                    break;
+            }
+            _alarm_face_display_alarm_time(state);
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ALARM_LONG_UP:
+            switch (state->setting_mode) {
+                case ALARM_FACE_SETTING_MODE_NONE:
+                    break;
+                case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
+                case ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
+                    state->quick_cycle = false;
+                    movement_request_tick_frequency(4);
                     break;
             }
             _alarm_face_display_alarm_time(state);
