@@ -1,7 +1,9 @@
-Second Movement
+Second Movement (opinionated branch)
 ===============
 
-This is the successor refactor of the Movement firmware for [Sensor Watch](https://www.sensorwatch.net).
+This is my own version of Second Movement which is very opinionated and personal to me.
+
+The goal here is to make the experience as close to OEM as possible. Only faces in the config are actively customized.
 
 
 Getting dependencies
