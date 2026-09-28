@@ -26,11 +26,6 @@
 #include "settings_face.h"
 #include "watch.h"
 
-static inline void button_beep() {
-    // play a beep as confirmation for a button press (if applicable)
-    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
-}
-
 static void clock_setting_display(uint8_t subsecond) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "CLOCK", "CL");
     if (subsecond % 2) {
@@ -73,10 +68,12 @@ static void beep_setting_advance(void) {
         movement_set_button_should_sound(true);
         movement_set_button_volume(WATCH_BUZZER_VOLUME_SOFT);
         beep_setting_display(1);
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_SOFT);
     } else if (movement_button_volume() == WATCH_BUZZER_VOLUME_SOFT) {
         // was soft. make it loud.
         movement_set_button_volume(WATCH_BUZZER_VOLUME_LOUD);
         beep_setting_display(1);
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_LOUD);
     } else {
         // was loud. make it silent.
         movement_set_button_should_sound(false);
@@ -404,7 +401,6 @@ bool settings_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_DOWN:
             state->current_page = (state->current_page + 1) % state->num_settings;
             watch_clear_display();
-            button_beep();
             // if (state->current_page == 0) movement_move_to_next_face();
             // fall through
         case EVENT_TICK:
@@ -417,7 +413,6 @@ bool settings_face_loop(movement_event_t event, void *context) {
             return true;
         case EVENT_ALARM_BUTTON_UP:
             state->settings_screens[state->current_page].advance();
-            button_beep();
             break;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);

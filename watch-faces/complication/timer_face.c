@@ -63,6 +63,7 @@ static void _start(timer_state_t *state, bool with_beep) {
     state->mode = running;
     movement_schedule_background_task_for_face(state->watch_face_index, target_dt);
     if (with_beep) watch_buzzer_play_sequence((int8_t *)_sound_seq_start, NULL);
+    movement_request_tick_frequency(2);
 }
 
 static void _draw(timer_state_t *state, uint8_t subsecond) {
@@ -74,6 +75,7 @@ static void _draw(timer_state_t *state, uint8_t subsecond) {
 
     switch (state->mode) {
         case pausing:
+            watch_set_colon();
             if (state->pausing_seconds != 1)
                 // not 1st iteration (or 256th): do not write anything
                 return;
@@ -117,6 +119,7 @@ static void _draw(timer_state_t *state, uint8_t subsecond) {
 static void _reset(timer_state_t *state) {
     state->mode = waiting;
     movement_cancel_background_task_for_face(state->watch_face_index);
+    movement_request_tick_frequency(1);
 }
 
 static void _set_next_valid_timer(timer_state_t *state) {
@@ -204,49 +207,78 @@ bool timer_face_loop(movement_event_t event, void *context) {
             _draw(state, event.subsecond);
             break;
         case EVENT_TICK:
-            if (state->mode == running) state->now_ts++;
+            if (state->mode == running) {
+                if (subsecond % 2) {
+                    watch_set_colon();
+                    state->now_ts++;
+                } else {
+                    watch_clear_colon();
+                }
+            }
             else if (state->mode == pausing) state->pausing_seconds++;
             else if (state->quick_cycle) {
                 if (HAL_GPIO_BTN_ALARM_read()) {
                     _settings_increment(state);
-                    button_beep();
                     subsecond = 0;
                 } else _abort_quick_cycle(state);
             }
             _draw(state, subsecond);
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
+            if (state->mode != setting) movement_illuminate_led();
             switch (state->mode) {
+                case pausing:
+                    _reset(state);
+                    button_beep();
+                    watch_set_colon();
+                    subsecond = 0;
+                    break;
                 case waiting:
                     state->timers[state->current_timer].unit.repeat ^= 1;
-                case pausing:
+                    break;
                 case running:
                     movement_illuminate_led();
                     break;
                 case setting:
-                    if (state->settings_state == 2) _resume_setting(state);
+                    if (state->settings_state == 2) {
+                        _resume_setting(state);
+                        button_beep();
+                    }
                     state->settings_state = (state->settings_state + 1) % 3;
-                    button_beep();
                     break;
                 default:
                     break;
             }
-            _draw(state, event.subsecond);
+            _draw(state, subsecond);
             break;
         case EVENT_LIGHT_LONG_PRESS:
             if (state->mode == waiting) {
+                state->timers[state->current_timer].unit.repeat ^= 1; // revert change made
                 // initiate settings
                 state->mode = setting;
                 state->settings_state = 0;
                 movement_request_tick_frequency(4);
-                button_beep();
             } else if (state->mode == setting) {
                 _resume_setting(state);
                 button_beep();
             }
-            _draw(state, event.subsecond);
+            _draw(state, subsecond);
             break;
         case EVENT_ALARM_BUTTON_UP:
+            _abort_quick_cycle(state);
+            if (_check_for_signal()) break;;
+            switch (state->mode) {
+                case waiting:
+                    _start(state, true);
+                    button_beep();
+                    subsecond = 0;
+                    break;
+                default:
+                    break;
+            }
+            _draw(state, subsecond);
+            break;
+        case EVENT_ALARM_BUTTON_DOWN:
             _abort_quick_cycle(state);
             if (_check_for_signal()) break;;
             switch (state->mode) {
@@ -255,19 +287,23 @@ bool timer_face_loop(movement_event_t event, void *context) {
                     state->pausing_seconds = 0;
                     state->paused_left = state->target_ts - state->now_ts;
                     movement_cancel_background_task();
+                    movement_request_tick_frequency(1);
+                    watch_set_colon();
+                    subsecond = 0;
+                    button_beep();
                     break;
                 case pausing:
                     _start(state, false);
+                    button_beep();
+                    subsecond = 0;
                     break;
                 case waiting:
-                    _start(state, true);
                     break;
                 case setting:
                     _settings_increment(state);
                     subsecond = 0;
                     break;
             }
-            button_beep();
             _draw(state, subsecond);
             break;
         case EVENT_ALARM_LONG_PRESS:
@@ -289,25 +325,41 @@ bool timer_face_loop(movement_event_t event, void *context) {
                     state->current_timer = (state->current_timer + 1) % TIMER_SLOTS;
                     _set_next_valid_timer(state);
                     // start the time immediately if there is only one valid timer slot
-                    if (last_timer == state->current_timer) _start(state, true);
+                    if (last_timer == state->current_timer) {
+                        _start(state, true); 
+                        subsecond = 0;
+                    }
                     button_beep();
                     break;
                 case running:
-                case pausing:
-                    _reset(state);
+                    state->mode = pausing;
+                    state->pausing_seconds = 0;
+                    state->paused_left = state->target_ts - state->now_ts;
+                    movement_cancel_background_task();
+                    movement_request_tick_frequency(1);
+                    watch_set_colon();
+                    subsecond = 0;
                     button_beep();
+                    break;
+                case pausing:
+                    _start(state, false);
+                    button_beep();
+                    subsecond = 0;
                     break;
                 default:
                     break;
             }
-            _draw(state, event.subsecond);
+            _draw(state,subsecond);
             break;
         case EVENT_BACKGROUND_TASK:
             // play the alarm
             _beeps_to_play = 4;
             watch_buzzer_play_sequence((int8_t *)_sound_seq_beep, _signal_callback);
             _reset(state);
-            if (state->timers[state->current_timer].unit.repeat) _start(state, false);
+            if (state->timers[state->current_timer].unit.repeat) {
+                _start(state, false);
+                subsecond = 0;
+            }
             break;
         case EVENT_ALARM_LONG_UP:
             _abort_quick_cycle(state);

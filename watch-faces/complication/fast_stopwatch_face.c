@@ -135,13 +135,12 @@ static void _draw_indicators(fast_stopwatch_state_t *state, movement_event_t eve
             return;
 
         case SW_STATUS_RUNNING_LAPPING:
+            watch_set_indicator(WATCH_INDICATOR_LAP);
             tock = event.subsecond > 0;
 
             if (tock) {
-                watch_clear_indicator(WATCH_INDICATOR_LAP);
                 watch_clear_colon();
             } else {
-                watch_set_indicator(WATCH_INDICATOR_LAP);
                 watch_set_colon();
             }
 
@@ -320,7 +319,7 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
     if (can_beep && (elapsed >> 7) > 0) {
         // slightly longer beep every 10 minutes
         if (movement_button_should_sound()) {
-            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 100, movement_signal_volume());
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 100, movement_button_volume());
         }
     }
 

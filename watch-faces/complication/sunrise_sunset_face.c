@@ -514,6 +514,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
                         state->active_digit = 0;
                         state->page = (state->page + 1) % 3;
                         _sunrise_sunset_face_update_location_register(state);
+                        if (state->page == 0) button_beep();
                     }
                 } else {
                     state->active_digit++;
@@ -522,9 +523,9 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
                         state->active_digit = 0;
                         state->page = (state->page + 1) % 3;
                         _sunrise_sunset_face_update_location_register(state);
+                        if (state->page == 0) button_beep();
                     }
                 }
-                button_beep();
                 _sunrise_sunset_face_update_settings_display(event, context);
             } else {
                 movement_illuminate_led();
@@ -546,7 +547,6 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
                 watch_clear_display();
                 movement_request_tick_frequency(4);
                 _sunrise_sunset_face_update_settings_display(event, context);
-                button_beep();
             } else {
                 if (_location_count <= 1) break;
                 else if (!state->page) movement_illuminate_led();
@@ -561,7 +561,6 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             if (state->page > 0) {
                 _sunrise_sunset_face_advance_digit(state);
                 _sunrise_sunset_face_update_settings_display(event, context);
-                button_beep();
             }
             break;
         case EVENT_ALARM_BUTTON_UP:
@@ -572,11 +571,14 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (!state->page) {
+            if (state->page == 0) {
                 if (state->page == 0 && _location_count > 1) {
                 state->longLatToUse = (state->longLatToUse + 1) % _location_count;
                 _sunrise_sunset_face_update(state);
-                button_beep();
+                } else {
+                    state->rise_index = (state->rise_index + 1) % 2;
+                    _sunrise_sunset_face_update(state);
+                    button_beep();
                 }
             }
             break;

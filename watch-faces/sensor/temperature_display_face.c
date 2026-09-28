@@ -29,11 +29,6 @@
 
 static bool skip = false;
 
-static inline void button_beep() {
-    // play a beep as confirmation for a button press (if applicable)
-    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
-}
-
 static void _temperature_display_face_update_display(bool in_fahrenheit) {
     float temperature_c = movement_get_temperature();
     if (in_fahrenheit) {
@@ -61,7 +56,6 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_LONG_PRESS:
             movement_set_use_imperial_units(!movement_use_imperial_units());
             _temperature_display_face_update_display(movement_use_imperial_units());
-            button_beep();
             break;
         case EVENT_ACTIVATE:
             if (skip) {

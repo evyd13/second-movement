@@ -44,7 +44,6 @@ static inline void button_beep() {
 
 static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_page) {
     // handles short or long pressing of the alarm button
-    button_beep();
     switch (current_page) {
         case 3: // time zone
             movement_set_timezone_index(movement_get_timezone_index() + 1);
@@ -95,6 +94,7 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
             watch_rtc_enable(false);
             delay_ms(delta);
             watch_rtc_enable(true);
+            button_beep();
 
             break;
         }
@@ -145,8 +145,8 @@ bool set_time_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             current_page = (current_page + 1) % SET_TIME_FACE_NUM_SETTINGS;
+            if (current_page == 0) button_beep();
             *((uint8_t *)context) = current_page;
-            button_beep();
             break;
         case EVENT_ALARM_BUTTON_DOWN:
             _abort_quick_ticks();

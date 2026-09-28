@@ -302,7 +302,6 @@ static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
             refresh_face = true;
             movement_request_tick_frequency(4);
             _settings_display(event, state);
-            _beep(BEEP_BUTTON);
             break;
         case EVENT_MODE_BUTTON_DOWN:
             /* Reset frequency and move to next face */
@@ -344,7 +343,6 @@ static bool _settings_loop(movement_event_t event, world_clock2_state_t *state)
         case EVENT_ALARM_BUTTON_UP:
             state->current_zone = mod(state->current_zone + FORWARD, NUM_ZONE_NAMES);
             _settings_display(event, state);
-            _beep(BEEP_BUTTON);
             break;
         case EVENT_LIGHT_BUTTON_UP:
             /* Toggle selection of current zone */
