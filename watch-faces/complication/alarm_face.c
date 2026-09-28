@@ -99,12 +99,10 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                     case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
                         // increment hour, wrap around to 0 at 23.
                         state->hour = (state->hour + 1) % 24;
-                        button_beep();
                         break;
                     case ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
                         // increment minute, wrap around to 0 at 59.
                         state->minute = (state->minute + 1) % 60;
-                        button_beep();
                         break;
                     default:
                         break;
