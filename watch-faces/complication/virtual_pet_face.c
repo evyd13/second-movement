@@ -1168,10 +1168,15 @@ static bool _handle_action_menu_choice(void *context) {
 
 static void _setup_game_shown_numbers(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
-    state->game_shown_number = random(2,8);
+    int previous_number = state->game_shown_number;
+    do {
+        state->game_shown_number = random(2,8);
+    } while (state->game_shown_number == previous_number);
+
+    previous_number = state->game_hidden_number;
     do {
         state->game_hidden_number = random(1,9);
-    } while (state->game_hidden_number == state->game_shown_number);
+    } while (state->game_hidden_number == state->game_shown_number || state->game_hidden_number == previous_number);
     // makes sure the numbers can never be the same. I want higher or lower, not equal!!
     
 #if __EMSCRIPTEN__
@@ -1183,6 +1188,8 @@ static void _setup_game_shown_numbers(void *context) {
 
 static void _setup_game(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    state->game_shown_number = 0;
+    state->game_hidden_number = 0;
     _setup_game_shown_numbers(state);
     state->game_display_mode = VIRTUAL_PET_GAME_MODE_ROUND_ACTIVE;
     state->game_round = 0;
