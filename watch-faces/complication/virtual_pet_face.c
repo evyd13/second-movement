@@ -388,6 +388,7 @@ static int8_t virtual_pet_pre_hatch_tune[] = {
     BUZZER_NOTE_B6, 5,
     BUZZER_NOTE_REST, 5,
     BUZZER_NOTE_E7, 5,
+    0
 };
 
 static int8_t virtual_pet_hatch_tune[] = {
@@ -590,6 +591,15 @@ static void _setup_pet(void *context) {
     state->last_game_logic_loop_counter = 0;
     state->games_played = VIRTUAL_PET_STARTING_GAMES_PLAYED;
     state->egg_idle_animation_chance = virtual_pet_phase_animations[VIRTUAL_PET_PHASE_EGG].idle_animation_chance;
+
+    state->current_character_animation_frame = 0;
+    state->current_poop_animation_frame = 0;
+    state->current_sickness_animation_frame = 0;
+    state->current_food_animation_frame = 0;
+    state->current_little_ghost_animation_frame = 0;
+    state->current_sleeping_animation_frame = 0;
+    state->current_eating_animation_frame = 0;
+
     if (state->phase == VIRTUAL_PET_PHASE_ADULT) state->type = VIRTUAL_PET_STARTING_TYPE;
 }
 
