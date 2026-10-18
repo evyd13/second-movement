@@ -1239,8 +1239,10 @@ static bool _game_mode_loop(movement_event_t event, void *context) {
                             if (state->games_played < VIRTUAL_PET_GAMES_PLAYED_FOR_SECRET_TYPE) state->games_played++;
 
                             // update pet stats
-                            if (state->happiness < VIRTUAL_PET_MAX_HAPPINESS) state->happiness++;
-                            if (state->happiness < VIRTUAL_PET_MAX_HAPPINESS && state->game_score >= VIRTUAL_PET_GAME_WIN_SCORE) state->happiness++;
+                            // give two happiness points if won
+                            for (int i = 0; i < 2; i++) {
+                                if (state->happiness < VIRTUAL_PET_MAX_HAPPINESS && state->game_score >= VIRTUAL_PET_GAME_WIN_SCORE) state->happiness++;
+                            }
                             if (state->needs < VIRTUAL_PET_MAX_NEEDS) state->needs++;
                         } else {
                             state->game_display_mode = VIRTUAL_PET_GAME_MODE_ROUND_ACTIVE;
