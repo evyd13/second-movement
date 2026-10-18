@@ -719,7 +719,7 @@ static void _set_is_sleeping(void *context, watch_date_time_t current_time) {
     }
 }
 
-static virtual_pet_emotions _get_emotion(void *context) {
+static virtual_pet_emotion _get_emotion(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
 
     if (state->display_mode == VIRTUAL_PET_DISPLAY_MODE_GAME) {
