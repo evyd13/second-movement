@@ -32,9 +32,9 @@
  * or die.
  *
  * Life phases:
- * - Egg (3 min)
- * - Baby (30 min)
- * - Child (1 day)
+ * - Egg (5-120 min)
+ * - Baby (45 min)
+ * - Child (~1 day)
  * - Adult
  * 
  * Depending on how you take care of it, you can get a different type of pet.
@@ -46,9 +46,9 @@
  * Care mistakes only count in the child phase.
  * 
  * Happiness: The pet will appear:
- * - sad if happiness is below 2
- * - neutral if happiness is between 2 and 4
- * - happy is happiness is above 4 (max 6)
+ * - Sad if happiness is below 2
+ * - Neutral if happiness is between 2 and 4
+ * - Happy is happiness is above 4 (max 6)
  * Happiness can be improved with snacks (dont overfeed!) or by playing a game. This stat will go down with time.
  * 
  * Hunger: Your pet will get hungry over time, just like it will be less happy if you don't play with it!
@@ -56,14 +56,14 @@
  * Sickness: Sometimes your pet gets sick. It happens when you don't take good care of your pet. To heal your pet, give it medicine.
  * Sickness will be shown as a skull in the top left (weekday).
  * 
- * Poop: Sometimes your pet will poop. It will be on the screen, usually in the left or right corner, as a box with a visible odor going back and forth.
+ * Poop: Sometimes your pet will poop. It will be on the screen, usually in the lower or upper right corner, as a box with a visible odor going back and forth.
  * To remove poop, clean the pet. If you fail to remove poop, the pet might become sick.
  * 
  * Attention: When your pet needs attention, it will make a noise and the bell indicator will appear. If you don't take care of your pet within 15 minutes,
  * it might get sick! (It counts as a care mistake)
  * 
  * Sleep: Just like you, your pet sleeps. In every life phase it will sleep a different amount of time.
- * Sleep is visible on with "ZZ" in the top left. The pet will appear as dashes, laying down. You can't wake it up, it will wake up on its own.
+ * Sleep is visible on with "ZZ" in the top left. A bed will be visible. You can't wake it up, it will wake up on its own.
  * 
  * Buttons:
  * Press Light to open the status menu. In the status menu, you can advance the menu by pressing the Light button again.
@@ -71,8 +71,8 @@
  * The following stats can be seen:
  * Hu - hunger
  * Ha - happiness
- * Ag - age (in days)
- * Tp - type
+ * Al - days alive (age)
+ * Ph - type/phase
  * 
  * Press Alarm to open the action menu. Here you can feed your pet, play with it or give it medicine. Use Light to advance, Alarm to confirm your choice.
  * When at the last item, advancing will close the menu.
@@ -86,6 +86,7 @@
  * - Press Light for higher, Mode for lower.
  * - Press Alarm to go back.
  * At the end of the game, the score is displayed.
+ * Did you win? Your pet will be very happy!
  */
 
 
