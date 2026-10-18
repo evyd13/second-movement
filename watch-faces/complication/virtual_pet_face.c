@@ -1657,8 +1657,10 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
 #endif
             return true; // Don't do any display stuff for background tasks
         case EVENT_TIMEOUT:
+            // event_timeout only gets called when the face is not the main face.
+            // If we want to close the menu after a while, we would have to implement that ourselves.
             _exit_game(event, state);
-            if (state->face_idx != 0) movement_move_to_face(0);
+            movement_move_to_face(0);
             break;
         default:
             break;
