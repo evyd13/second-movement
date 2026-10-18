@@ -184,13 +184,12 @@ typedef enum {
     VIRTUAL_PET_EMOTION_HAPPY,
     VIRTUAL_PET_EMOTION_SLEEPING,
     VIRTUAL_PET_EMOTION_EATING,
-} virtual_pet_emotions;
+} virtual_pet_emotion;
 
 typedef struct {
     uint8_t hour_start;
     uint8_t hour_end;
 } virtual_pet_sleep_time_t;
-
 
 /*
  * Display modes. These change button behaviour.
@@ -213,7 +212,7 @@ typedef enum {
     VIRTUAL_PET_ACTION_MENU_ITEM_MEDICATION,
     VIRTUAL_PET_ACTION_MENU_ITEM_BUZZER,
     VIRTUAL_PET_ACTION_MENU_LENGTH,
-} virtual_pet_action_menu_items;
+} virtual_pet_action_menu_item;
 
 typedef enum {
     VIRTUAL_PET_STATUS_MENU_HUNGER = 0,
@@ -221,7 +220,7 @@ typedef enum {
     VIRTUAL_PET_STATUS_MENU_AGE,
     VIRTUAL_PET_STATUS_MENU_TYPE,
     VIRTUAL_PET_STATUS_MENU_LENGTH,
-} virtual_pet_status_menu_items;
+} virtual_pet_status_menu_item;
 
 typedef enum {
     VIRTUAL_PET_GAME_MODE_ROUND_ACTIVE, // press higher or lower
