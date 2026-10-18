@@ -314,7 +314,7 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
 
     state_transition(state, counter, event.event_type);
     rtc_counter_t elapsed = elapsed_time(state, counter);
-
+//tick = 96
     bool can_beep = (get_refresh_rate(state) == DISPLAY_RUNNING_RATE_SLOW) ? (elapsed >> 6) % (600*2) == 0 : (elapsed >> 2) % (600*32) == 0;
     if (can_beep && (elapsed >> 7) > 0) {
         // slightly longer beep every 10 minutes
