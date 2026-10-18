@@ -1658,7 +1658,7 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
             return true; // Don't do any display stuff for background tasks
         case EVENT_TIMEOUT:
             _exit_game(event, state);
-            movement_move_to_face(0);
+            if (state->face_idx != 0) movement_move_to_face(0);
             break;
         default:
             break;
