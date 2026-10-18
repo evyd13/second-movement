@@ -1018,6 +1018,8 @@ static bool _pet_loop(movement_event_t event, void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
 
     switch (event.event_type) {
+        case EVENT_LIGHT_BUTTON_DOWN:
+            break; // no light
         case EVENT_ACTIVATE:
         case EVENT_TICK:
             _draw_pet(state);
@@ -1665,8 +1667,8 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
     _game_logic_loop(event, state);
 
     switch (event.event_type) {
-        // gotta turn off the led
         case EVENT_LIGHT_BUTTON_UP:
+            // gotta turn off the led
             movement_default_loop_handler(event);
             break;
         case EVENT_BACKGROUND_TASK:
