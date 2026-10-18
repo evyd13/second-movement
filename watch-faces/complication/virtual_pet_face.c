@@ -55,15 +55,15 @@ static virtual_pet_phase_attribute_t virtual_pet_phase_attributes[] = {
     },
     { // Baby
         .phase_length = 45,
-        .time_hunger = 8,
-        .time_happiness = 7,
-        .time_needs = 3,
+        .time_hunger = 5,
+        .time_happiness = 4,
+        .time_needs = 2,
     },
     { // Child
         .phase_length = 12*60, //12 hrs, 12 hrs of sleep in between
-        .time_hunger = 30,
-        .time_happiness = 25,
-        .time_needs = 15,
+        .time_hunger = 15,
+        .time_happiness = 10,
+        .time_needs = 8,
     },
     { // Adult (hunger and happiness determined by type, see below.)
     },
@@ -109,22 +109,22 @@ static virtual_pet_bottom_text_t virtual_pet_type_text[] = {
 static virtual_pet_type_attribute_t virtual_pet_type_attributes[] = {
     // Minutes for every subtraction of a stat {hunger, happiness}
     { // Needy
-        .time_hunger = 60,
-        .time_happiness = 30,
+        .time_hunger = 40,
+        .time_happiness = 25,
         .time_needs = 20,
     },
     { // Average
-        .time_hunger = 70,
+        .time_hunger = 55,
         .time_happiness = 35,
         .time_needs = 25,
     },
     { // Easy
-        .time_hunger = 90,
+        .time_hunger = 70,
         .time_happiness = 40,
         .time_needs = 30,
     },
     { // Secret is suuuuper chill
-        .time_hunger = 120,
+        .time_hunger = 100,
         .time_happiness = 60,
         .time_needs = 45,
     },
@@ -1585,6 +1585,9 @@ static void _game_logic_loop(movement_event_t event, void *context) {
                 } else {
                     state->poops++;
                     state->needs = 0;
+                    if (state->time_alive < 5 && state->phase == VIRTUAL_PET_PHASE_BABY) {
+                        if (!playing_game) _make_pet_sick_with_chance(state, 9);
+                    }
                 }
             } else {
                 state->needs++;
@@ -1593,8 +1596,6 @@ static void _game_logic_loop(movement_event_t event, void *context) {
         // Randomly getting sick
         if (state->time_alive % 1440 == 0 && state->phase == VIRTUAL_PET_PHASE_ADULT) {
             if (!playing_game) _make_pet_sick_with_chance(state, VIRTUAL_PET_ADULT_RANDOM_SICKNESS_CHANCE);
-        } else if (state->time_alive % virtual_pet_phase_attributes[VIRTUAL_PET_PHASE_BABY].phase_length*.5 == 0 && state->phase == VIRTUAL_PET_PHASE_BABY) {
-            if (!playing_game) _make_pet_sick_with_chance(state, 9);
         }
 
         // plan background task for next time
