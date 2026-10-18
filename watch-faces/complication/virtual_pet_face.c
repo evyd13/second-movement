@@ -857,7 +857,7 @@ static void _draw_sickness(void *context) {
 
 static void _draw_attention(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
-    if (state->needs_attention && state->passing_counter == 0) watch_set_indicator(WATCH_INDICATOR_BELL);
+    if (state->needs_attention && state->passing_counter == 0 && !state->is_sleeping) watch_set_indicator(WATCH_INDICATOR_BELL);
     else watch_clear_indicator(WATCH_INDICATOR_BELL);
 }
 
@@ -1109,7 +1109,7 @@ static bool _status_menu_loop(movement_event_t event, void *context) {
 static bool _handle_action_menu_choice(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     // return true if happy sound, else sad sound
-    
+    if (state->is_sleeping) return false;
     switch(state->current_menu_index) {
         case VIRTUAL_PET_ACTION_MENU_ITEM_EAT:
             if (state->hunger >= VIRTUAL_PET_MAX_HUNGER || state->sickness > 0) {
