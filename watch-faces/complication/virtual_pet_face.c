@@ -725,6 +725,10 @@ static void _set_is_sleeping(void *context, watch_date_time_t current_time) {
                     if(state->hunger > 1) state->hunger--;
                 }
             }
+            //ask for attention once the pet wakes up and it already needs attention
+            if (state->needs_attention) {
+                _ask_for_attention(state);
+            }
         }
     }
 }
@@ -857,6 +861,7 @@ static void _draw_sickness(void *context) {
 
 static void _draw_attention(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    // don't draw while dead or while sleeping.
     if (state->needs_attention && state->passing_counter == 0 && !state->is_sleeping) watch_set_indicator(WATCH_INDICATOR_BELL);
     else watch_clear_indicator(WATCH_INDICATOR_BELL);
 }
@@ -895,6 +900,7 @@ static void _draw_pet(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
 
     _draw_character(state);
+    // only update when not eating for added gameplay
     if (state->phase > VIRTUAL_PET_PHASE_EGG && !state->is_eating) _draw_attention(state);
     if (state->phase > VIRTUAL_PET_PHASE_EGG && state->phase != VIRTUAL_PET_PHASE_DEAD) {
         _draw_poop(state);
