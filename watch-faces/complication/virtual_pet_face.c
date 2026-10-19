@@ -100,8 +100,8 @@ static virtual_pet_sleep_time_t virtual_pet_sleep_time[] = {
  */
 static virtual_pet_bottom_text_t virtual_pet_type_text[] = {
     // Minutes for every subtraction of a stat {hunger, happiness}
-    {"Needy ", "Ndy   "}, // Needy
-    {"Avg   ", "Avg   "}, // Average
+    {"Needy ", "Needy "}, // Needy
+    {"Avg   ", "Averag"}, // Average
     {"Easy  ", "EASY  "}, // Easy
     {"Secret", "Secret"}, // Secret
 };
