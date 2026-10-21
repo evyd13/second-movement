@@ -29,6 +29,7 @@
 
 const watch_face_t watch_faces[] = {
     clock_face,
+    virtual_pet_face,
     alarm_face,
     fast_stopwatch_face,
     timer_face,
