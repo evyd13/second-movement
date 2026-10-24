@@ -43,6 +43,12 @@
        turns on on each button press or it doesn't.
 */
 
+// distant future for background task: January 1, 2083
+// see stopwatch_face_activate for details
+static const watch_date_time_t distant_future = {
+    .unit = {0, 0, 0, 1, 1, 63}
+};
+
 // Loosely implement the watch as a state machine
 typedef enum {
     SW_STATUS_IDLE = 0,
@@ -186,6 +192,7 @@ static void state_transition(fast_stopwatch_state_t *state, rtc_counter_t counte
                     state->status = SW_STATUS_RUNNING;
                     state->start_counter = counter;
                     movement_request_tick_frequency(get_refresh_rate(state));
+                    movement_schedule_background_task(distant_future);
                     return;
                 case EVENT_LIGHT_LONG_PRESS:
                     state->slow_refresh = !state->slow_refresh;
@@ -199,6 +206,7 @@ static void state_transition(fast_stopwatch_state_t *state, rtc_counter_t counte
                 case EVENT_ALARM_BUTTON_DOWN:
                     state->status = SW_STATUS_STOPPED;
                     state->stop_counter = counter;
+                    movement_cancel_background_task();
                     movement_request_tick_frequency(get_refresh_rate(state));
                     return;
                 case EVENT_LIGHT_BUTTON_DOWN:
@@ -315,17 +323,18 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
     state_transition(state, counter, event.event_type);
     rtc_counter_t elapsed = elapsed_time(state, counter);
     
-    bool can_beep = false;
-    if (get_refresh_rate(state) == DISPLAY_RUNNING_RATE_SLOW) {
-        can_beep = (elapsed >> 7) % 600 == 0 && ((elapsed & 0x7F) * 100 / 128) < 64;
-    } else {
-        can_beep = (elapsed >> 7) % 600 == 0 && ((elapsed & 0x7F) * 100 / 128) == 0;
-    }
-    
-    if (can_beep && (elapsed >> 7) > 0) {
-        // slightly longer beep every 10 minutes
-        if (movement_button_should_sound()) {
-            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 100, movement_button_volume());
+    if ((elapsed >> 7) > 0 && (elapsed >> 7) % 600 == 0) {
+        bool can_beep = false;
+        if (get_refresh_rate(state) == DISPLAY_RUNNING_RATE_SLOW) {
+            can_beep = ((elapsed & 0x7F) * 100 / 128) < 64;
+        } else {
+            can_beep = ((elapsed & 0x7F) * 100 / 128) == 0;
+        }
+        if (can_beep) {
+            // slightly longer beep every 10 minutes
+            if (movement_button_should_sound()) {
+                watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 100, movement_button_volume());
+            }
         }
     }
 
@@ -356,4 +365,5 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
 void fast_stopwatch_face_resign(void *context) {
     (void) context;
     movement_request_tick_frequency(1);
+    movement_cancel_background_task();
 }
